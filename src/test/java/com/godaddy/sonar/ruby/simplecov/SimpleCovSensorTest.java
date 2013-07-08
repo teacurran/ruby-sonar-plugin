@@ -42,7 +42,7 @@ public class SimpleCovSensorTest {
 	}
 	
 	@After
-	public void tearDowm() throws Exception
+	public void tearDown() throws Exception
 	{
 	}
 	

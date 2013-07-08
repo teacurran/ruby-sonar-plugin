@@ -75,7 +75,7 @@ public class SimpleCovRcovSensor implements Sensor {
             try {
             	String fileName = result.getFileName().replaceAll("\"", "");
             	sourceFile = new File(fileName);
-            	RubyFile rubyFile = RubyFile.fromIOFile(sourceFile, sourceDirs, false);
+            	RubyFile rubyFile = new RubyFile(sourceFile, sourceDirs);
             	context.saveMeasure(rubyFile, CoreMetrics.LINE_COVERAGE, (double)result.getPercentCoverage());
             	context.saveMeasure(rubyFile, CoreMetrics.COVERAGE_LINE_HITS_DATA, (double)result.getLinesCovered());
 

@@ -23,73 +23,37 @@ public class RubyFile extends Resource<RubyPackage>
 	private String packageKey;
 	private RubyPackage parent = null;
 
-	public RubyFile(String key) 
-	{
-		super();
-		String realKey = StringUtils.trim(key);
-
-		if (realKey.contains("."))
-		{
-			this.filename = StringUtils.substringAfterLast(realKey, ".");
-			this.packageKey = StringUtils.substringBeforeLast(realKey, ".");
-			this.longName = realKey;
-
-		}
-		else
-		{
-			this.filename = realKey;
-			this.longName = realKey;
-			this.packageKey = RubyPackage.DEFAULT_PACKAGE_NAME;
-			realKey = new StringBuilder()
-					.append(RubyPackage.DEFAULT_PACKAGE_NAME).append(".")
-					.append(realKey).toString();
-		}
-		setKey(realKey);
-	}
 
 	public RubyFile(File file, List<File> sourceDirs) 
 	{
 		super();
 		
-		PathResolver resolver = new PathResolver();
-		RelativePath relativePath = resolver.relativePath(sourceDirs, file);
-		if (relativePath != null) 
-		{
-			String packName = null;
-			String className = relativePath.toString();
-			
-			String path = relativePath.path();
-			if (path.indexOf('/') >= 0) 
+		if (file == null) {
+			throw new IllegalArgumentException("File cannot be null");
+		}
+		
+		String dirName = null;
+		this.filename = StringUtils.substringBeforeLast(file.getName(), ".");
+		this.packageKey = RubyPackage.DEFAULT_PACKAGE_NAME;
+		
+		if (sourceDirs != null) {
+			PathResolver resolver = new PathResolver();
+			RelativePath relativePath = resolver.relativePath(sourceDirs, file);
+			if (relativePath != null) 
 			{
-				packName = StringUtils.substringBeforeLast(path, "/");
-				packName = StringUtils.replace(packName, "/", ".");
-				className = StringUtils.substringAfterLast(path, "/");
+				dirName = relativePath.dir().toString();
+				this.filename = StringUtils.substringBeforeLast(relativePath.path(), ".");
+				
+				if (dirName.indexOf(File.separator) >= 0) 
+				{
+					this.packageKey = StringUtils.strip(dirName, File.separator);
+					this.packageKey = StringUtils.replace(this.packageKey, File.separator, ".");
+				}
 			}
-			className = StringUtils.substringBeforeLast(className, ".");
-			this.setPackageKey(packName);
-			this.setLongName(className);
-			return;
 		}
-		throw new IllegalArgumentException("Relative path cannot be found.");
-	}
-
-	public RubyFile(String packageKey, String className) {
-		super();
-
-		this.filename = className.trim();
-		String key;
-		if (StringUtils.isBlank(packageKey)) 
-		{
-			this.packageKey = RubyPackage.DEFAULT_PACKAGE_NAME;
-			this.longName = this.filename;
-			key = new StringBuilder().append(this.packageKey).append(".").append(this.filename).toString();
-		}
-		else 
-		{
-			this.packageKey = packageKey.trim();
-			key = new StringBuilder().append(this.packageKey).append(".").append(this.filename).toString();
-			this.longName = key;
-		}
+		
+		String key = new StringBuilder().append(this.packageKey).append(".").append(this.filename).toString();
+		this.longName = key;		
 		setKey(key);
 	}
 	
@@ -134,68 +98,9 @@ public class RubyFile extends Resource<RubyPackage>
 
 	public boolean matchFilePattern(String antPattern)
 	{
-		String patternWithoutFileSuffix = StringUtils.substringBeforeLast(
-				antPattern, ".");
-		WildcardPattern matcher = WildcardPattern.create(
-				patternWithoutFileSuffix, ".");
+		String patternWithoutFileSuffix = StringUtils.substringBeforeLast(antPattern, ".");
+		WildcardPattern matcher = WildcardPattern.create(patternWithoutFileSuffix, ".");
 		return matcher.match(getKey());
-	}
-
-	private void setPackageKey(String packName)
-	{
-		
-	}
-	
-	private void setLongName(String longName)
-	{
-		
-	}
-	
-	/**
-	 * Creates a {@link RubyFile} from a file in the source directories.
-	 * 
-	 * @param unitTest
-	 *            whether it is a unit test file or a source file
-	 * @return the {@link RubyFile} created if exists, null otherwise
-	 */
-	public static RubyFile fromIOFile(File file, List<File> sourceDirs, boolean unitTest) 
-	{
-		if (file == null) 
-		{
-			return null;
-		}
-		PathResolver resolver = new PathResolver();
-		RelativePath relativePath = resolver.relativePath(sourceDirs, file);
-		if (relativePath != null) 
-		{
-			String pacname = null;
-			String classname = relativePath.toString();
-			
-			String path = relativePath.path();
-			if (path.indexOf('/') >= 0) 
-			{
-				pacname = StringUtils.substringBeforeLast(path, "/");
-				pacname = StringUtils.replace(pacname, "/", ".");
-				classname = StringUtils.substringAfterLast(path, "/");
-			}
-			classname = StringUtils.substringBeforeLast(classname, ".");
-			return new RubyFile(pacname, classname);
-		}
-		return null;
-	}
-
-	/**
-	 * Shortcut to {@link #fromIOFile(File, List, boolean)} with an absolute
-	 * path.
-	 */
-	public static RubyFile fromAbsolutePath(String path, List<File> sourceDirs,
-			boolean unitTest) 
-	{
-		if (path == null) 
-		{
-			return null;
-		}
-		return fromIOFile(new File(path), sourceDirs, unitTest);
 	}
 
 	@Override

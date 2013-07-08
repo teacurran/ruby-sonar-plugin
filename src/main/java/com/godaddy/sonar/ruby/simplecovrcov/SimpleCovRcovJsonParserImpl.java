@@ -12,7 +12,7 @@ import org.sonar.api.measures.CoverageMeasuresBuilder;
 
 import com.google.common.collect.Maps;
 
-public class SimpleCovRcovJsonParserImpl {
+public class SimpleCovRcovJsonParserImpl implements SimpleCovRcovJsonParser {
 
 	public Map<String, CoverageMeasuresBuilder> parse(File file) throws IOException
 	{

@@ -1,7 +1,6 @@
 package com.godaddy.sonar.ruby.core;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.sonar.api.resources.Language;
 import org.sonar.api.resources.Qualifiers;
@@ -14,7 +13,8 @@ import org.sonar.api.utils.WildcardPattern;
 import java.io.File;
 import java.util.List;
 
-public class RubyFile extends Resource<RubyPackage> {
+public class RubyFile extends Resource<RubyPackage> 
+{
 
 	private static final long serialVersionUID = 1L;
 
@@ -23,16 +23,20 @@ public class RubyFile extends Resource<RubyPackage> {
 	private String packageKey;
 	private RubyPackage parent = null;
 
-	public RubyFile(String key) {
+	public RubyFile(String key) 
+	{
 		super();
 		String realKey = StringUtils.trim(key);
 
-		if (realKey.contains(".")) {
+		if (realKey.contains("."))
+		{
 			this.filename = StringUtils.substringAfterLast(realKey, ".");
 			this.packageKey = StringUtils.substringBeforeLast(realKey, ".");
 			this.longName = realKey;
 
-		} else {
+		}
+		else
+		{
 			this.filename = realKey;
 			this.longName = realKey;
 			this.packageKey = RubyPackage.DEFAULT_PACKAGE_NAME;
@@ -43,7 +47,8 @@ public class RubyFile extends Resource<RubyPackage> {
 		setKey(realKey);
 	}
 
-	public RubyFile(File file, List<File> sourceDirs) {
+	public RubyFile(File file, List<File> sourceDirs) 
+	{
 		super();
 		
 		PathResolver resolver = new PathResolver();
@@ -73,11 +78,14 @@ public class RubyFile extends Resource<RubyPackage> {
 
 		this.filename = className.trim();
 		String key;
-		if (StringUtils.isBlank(packageKey)) {
+		if (StringUtils.isBlank(packageKey)) 
+		{
 			this.packageKey = RubyPackage.DEFAULT_PACKAGE_NAME;
 			this.longName = this.filename;
 			key = new StringBuilder().append(this.packageKey).append(".").append(this.filename).toString();
-		} else {
+		}
+		else 
+		{
 			this.packageKey = packageKey.trim();
 			key = new StringBuilder().append(this.packageKey).append(".").append(this.filename).toString();
 			this.longName = key;
@@ -85,38 +93,47 @@ public class RubyFile extends Resource<RubyPackage> {
 		setKey(key);
 	}
 	
-	public RubyPackage getParent() {
-		if (parent == null) {
+	public RubyPackage getParent() 
+	{
+		if (parent == null) 
+		{
 			parent = new RubyPackage(packageKey);
 		}
 		return parent;
 	}
 
-	public String getDescription() {
+	public String getDescription() 
+	{
 		return null;
 	}
 
-	public Language getLanguage() {
+	public Language getLanguage() 
+	{
 		return Ruby.INSTANCE;
 	}
 
-	public String getName() {
+	public String getName() 
+	{
 		return filename;
 	}
 
-	public String getLongName() {
+	public String getLongName() 
+	{
 		return longName;
 	}
 
-	public String getScope() {
+	public String getScope() 
+	{
 		return Scopes.FILE;
 	}
 
-	public String getQualifier() {
+	public String getQualifier() 
+	{
 		return Qualifiers.CLASS;
 	}
 
-	public boolean matchFilePattern(String antPattern) {
+	public boolean matchFilePattern(String antPattern)
+	{
 		String patternWithoutFileSuffix = StringUtils.substringBeforeLast(
 				antPattern, ".");
 		WildcardPattern matcher = WildcardPattern.create(
@@ -141,7 +158,8 @@ public class RubyFile extends Resource<RubyPackage> {
 	 *            whether it is a unit test file or a source file
 	 * @return the {@link RubyFile} created if exists, null otherwise
 	 */
-	public static RubyFile fromIOFile(File file, List<File> sourceDirs, boolean unitTest) {
+	public static RubyFile fromIOFile(File file, List<File> sourceDirs, boolean unitTest) 
+	{
 		if (file == null) 
 		{
 			return null;
@@ -161,7 +179,7 @@ public class RubyFile extends Resource<RubyPackage> {
 				classname = StringUtils.substringAfterLast(path, "/");
 			}
 			classname = StringUtils.substringBeforeLast(classname, ".");
-			return new RubyFile(pacname, classname, unitTest);
+			return new RubyFile(pacname, classname);
 		}
 		return null;
 	}
@@ -171,17 +189,19 @@ public class RubyFile extends Resource<RubyPackage> {
 	 * path.
 	 */
 	public static RubyFile fromAbsolutePath(String path, List<File> sourceDirs,
-			boolean unitTest) {
-		if (path == null) {
+			boolean unitTest) 
+	{
+		if (path == null) 
+		{
 			return null;
 		}
 		return fromIOFile(new File(path), sourceDirs, unitTest);
 	}
 
 	@Override
-	public String toString() {
+	public String toString() 
+	{
 		return new ToStringBuilder(this).append("key", getKey())
-				.append("package", packageKey).append("longName", longName)
-				.append("unitTest", unitTest).toString();
+				.append("package", packageKey).append("longName", longName).toString();
 	}
 }

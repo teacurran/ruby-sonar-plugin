@@ -48,16 +48,11 @@ public class SimpleCovRcovJsonParserImpl {
 				int lineNumber = i+1;
 				
 				//if line is null, then that line was not covered, so set the value to 0
-				if(line==null)
+				if(line!=null)
 				{
-					intLine = 0;
-				}
-				//else take the long value and parse it as an int 
-				else
-				{	
 					intLine = line.intValue();
-				}		
-				fileCoverage.setHits(lineNumber, intLine);			
+					fileCoverage.setHits(lineNumber, intLine);
+				}				
 			}
 			coveredFiles.put(filePath, fileCoverage);
 		}

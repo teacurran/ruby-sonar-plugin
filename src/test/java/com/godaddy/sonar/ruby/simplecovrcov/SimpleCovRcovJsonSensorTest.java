@@ -71,4 +71,10 @@ public class SimpleCovRcovJsonSensorTest {
 		
 		assertFalse(simpleCovRcovJsonSensor.shouldExecuteOnProject(project));
 	}
+	
+	@Test
+	public void testAnalyse()
+	{
+		
+	}
 }

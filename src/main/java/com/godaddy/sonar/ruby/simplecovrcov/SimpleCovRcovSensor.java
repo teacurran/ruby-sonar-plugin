@@ -2,8 +2,11 @@ package com.godaddy.sonar.ruby.simplecovrcov;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +15,7 @@ import org.sonar.api.batch.SensorContext;
 import org.sonar.api.config.Settings;
 import org.sonar.api.measures.CoreMetrics;
 import org.sonar.api.measures.CoverageMeasuresBuilder;
+import org.sonar.api.measures.Measure;
 import org.sonar.api.resources.Project;
 import org.sonar.api.scan.filesystem.ModuleFileSystem;
 
@@ -50,7 +54,7 @@ public class SimpleCovRcovSensor implements Sensor {
 	public void analyse(Project project, SensorContext context)
 	{
 		File csvFile = new File("coverage/results.csv");
-		File jsonFile = new File("coverage/results.json");
+		File jsonFile = new File("coverage/.resultset.json");
 		
 		List<File> sourceDirs = moduleFileSystem.sourceDirs();
 		try 
@@ -72,7 +76,8 @@ public class SimpleCovRcovSensor implements Sensor {
 		File sourceFile = null;
 		for (SimpleCovCsvFileResult result : csvResults.getCsvFilesResult())
 		{
-            try {
+            try 
+            {
             	String fileName = result.getFileName().replaceAll("\"", "");
             	sourceFile = new File(fileName);
             	RubyFile rubyFile = RubyFile.fromIOFile(sourceFile, sourceDirs, false);
@@ -82,9 +87,10 @@ public class SimpleCovRcovSensor implements Sensor {
                 context.saveMeasure(rubyFile, CoreMetrics.LINES_TO_COVER, (double)result.getRelevantLines());
                 context.saveMeasure(rubyFile, CoreMetrics.UNCOVERED_LINES, (double)result.getLinesMissed());
                 
-                CoverageMeasuresBuilder fileCoverage = jsonResults.get(fileName);
-                
-            } catch (Exception e) {
+                calculateMetricsFromJsonReport(rubyFile, jsonResults, context);                
+            } 
+            catch (Exception e) 
+            {
             	if (sourceFile != null) {
             		LOG.error("Unable to save metrics for file: " + sourceFile.getName(), e);
             	} else {
@@ -92,5 +98,29 @@ public class SimpleCovRcovSensor implements Sensor {
             	}
             }
 		}
-	}	
+	}
+	
+	private void calculateMetricsFromJsonReport(RubyFile rubyFile, Map<String, CoverageMeasuresBuilder> jsonResults, final SensorContext context)
+	{
+		CoverageMeasuresBuilder fileCoverage = null;
+		String relativePath = rubyFile.getName().replaceFirst("^\\.", "");
+		
+		for (Entry<String, CoverageMeasuresBuilder> e : jsonResults.entrySet()) 
+		{
+			if (e.getKey().contains(relativePath)) 
+			{
+				 fileCoverage = jsonResults.get(e.getKey());
+				 break;
+			}
+		}
+		
+		if(fileCoverage!=null)
+		{
+			for(Measure measure : fileCoverage.createMeasures())
+			{
+				context.saveMeasure(rubyFile,measure);
+			}
+		}
+		
+	}
 }

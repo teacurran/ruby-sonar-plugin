@@ -1,4 +1,4 @@
-package com.pica.sonarplugins.ruby.core;
+package com.godaddy.sonar.ruby.core;
 
 import org.sonar.api.resources.AbstractLanguage;
 

@@ -1,84 +1,147 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>com.pica</groupId>
-    <artifactId>sonar-ruby-plugin</artifactId>
-    <packaging>sonar-plugin</packaging>
-    <version>1.0</version>
-    <name>Ruby Plugin</name>
-    <description>Adds Sonar support for the Ruby language</description>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-    <distributionManagement>
-        <repository>
-            <uniqueVersion>false</uniqueVersion>
-            <id>pica-releases</id>
-            <name>Pica Release Repository</name>
-            <url>http://mvnrepository.picagroup.net/nexus/content/repositories/releases/</url>
-        </repository>
-        <snapshotRepository>
-            <uniqueVersion>true</uniqueVersion>
-            <id>pica-snapshots</id>
-            <name>Pica Snapshot Repository</name>
-            <url>http://mvnrepository.picagroup.net/nexus/content/repositories/snapshots/</url>
-        </snapshotRepository>
-    </distributionManagement>
+  <groupId>com.godaddy.sonar</groupId>
+  <artifactId>sonar-ruby-plugin</artifactId>
+  <packaging>sonar-plugin</packaging>
+  <version>1.0.0-SNAPSHOT</version>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.codehaus.sonar</groupId>
-            <artifactId>sonar-plugin-api</artifactId>
-            <version>3.1.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.pica</groupId>
-            <artifactId>ruby-metrics-parsers</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.sonar</groupId>
-            <artifactId>sonar-testing-harness</artifactId>
-            <version>3.1.1</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+  <name>Sonar Ruby Plugin</name>
+  <description>Plugin to report ruby code coverage into sonar</description>
 
-    <properties>
-        <sonar.version>2.7</sonar.version>
-        <sonar.pluginClass>com.pica.sonarplugins.ruby.RubyPlugin</sonar.pluginClass>
-        <sonar.runtimeVersion>2.7</sonar.runtimeVersion>
-        <sonar.pluginName>Ruby</sonar.pluginName>
-    </properties>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.sonar</groupId>
-                <artifactId>sonar-packaging-maven-plugin</artifactId>
-                <version>1.0</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <pluginClass>com.pica.sonarplugins.ruby.RubyPlugin</pluginClass>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <configuration>
-                    <goals>deploy</goals>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.0.2</version>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                    <encoding>UTF-8</encoding>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+    <sonar.buildVersion>3.5.1</sonar.buildVersion>
+    <jdk.min.version>1.5</jdk.min.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.codehaus.sonar</groupId>
+      <artifactId>sonar-plugin-api</artifactId>
+      <version>${sonar.buildVersion}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- unit tests -->
+    <dependency>
+      <groupId>org.codehaus.sonar</groupId>
+      <artifactId>sonar-testing-harness</artifactId>
+      <version>${sonar.buildVersion}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+    	<groupId>junit</groupId>
+    	<artifactId>junit</artifactId>
+    	<version>4.11</version>
+    	<scope>test</scope>
+    </dependency>
+	<dependency>
+		<groupId>org.easymock</groupId>
+		<artifactId>easymock</artifactId>
+		<version>2.5</version>
+		<scope>test</scope>
+	</dependency>        
+    <dependency>
+      <groupId>org.easytesting</groupId>
+      <artifactId>fest-assert</artifactId>
+      <version>1.4</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-project</artifactId>
+      <version>2.2.1</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.sonar</groupId>
+        <artifactId>sonar-packaging-maven-plugin</artifactId>
+        <version>1.7</version>
+        <extensions>true</extensions>
+        <configuration>
+          <pluginClass>com.godaddy.sonar.ruby.RubyPlugin</pluginClass>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.5.1</version>
+        <configuration>
+          <source>${jdk.min.version}</source>
+          <target>${jdk.min.version}</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <!-- UTF-8 bundles are not supported by Java, so they must be converted during build -->
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>native2ascii-maven-plugin</artifactId>
+        <version>1.0-beta-1</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>native2ascii</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+    <pluginManagement>
+    	<plugins>
+    		<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+    		<plugin>
+    			<groupId>org.eclipse.m2e</groupId>
+    			<artifactId>lifecycle-mapping</artifactId>
+    			<version>1.0.0</version>
+    			<configuration>
+    				<lifecycleMappingMetadata>
+    					<pluginExecutions>
+    						<pluginExecution>
+    							<pluginExecutionFilter>
+    								<groupId>
+    									org.codehaus.sonar
+    								</groupId>
+    								<artifactId>
+    									sonar-packaging-maven-plugin
+    								</artifactId>
+    								<versionRange>[1.3,)</versionRange>
+    								<goals>
+    									<goal>check-dependencies</goal>
+    								</goals>
+    							</pluginExecutionFilter>
+    							<action>
+    								<ignore></ignore>
+    							</action>
+    						</pluginExecution>
+    						<pluginExecution>
+    							<pluginExecutionFilter>
+    								<groupId>org.codehaus.mojo</groupId>
+    								<artifactId>
+    									native2ascii-maven-plugin
+    								</artifactId>
+    								<versionRange>
+    									[1.0-beta-1,)
+    								</versionRange>
+    								<goals>
+    									<goal>native2ascii</goal>
+    								</goals>
+    							</pluginExecutionFilter>
+    							<action>
+    								<ignore></ignore>
+    							</action>
+    						</pluginExecution>
+    					</pluginExecutions>
+    				</lifecycleMappingMetadata>
+    			</configuration>
+    		</plugin>
+    	</plugins>
+    </pluginManagement>
+  </build>
+
 </project>

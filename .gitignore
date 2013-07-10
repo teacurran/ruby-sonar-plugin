@@ -1,8 +1,8 @@
-target
-*.iws
-*.iml
-*.ipr
+target/
 .classpath
 .project
-out
-*.log
+.settings/
+META-INF/
+bin/
+build.properties
+

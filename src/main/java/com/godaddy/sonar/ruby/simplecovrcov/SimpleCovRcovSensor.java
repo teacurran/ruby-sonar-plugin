@@ -61,12 +61,9 @@ public class SimpleCovRcovSensor implements Sensor {
 		for (Entry<String, CoverageMeasuresBuilder> entry : jsonResults.entrySet()) 
 		{
             try 
-            {
-            	           	
-            	String fileName = entry.getKey();
-                 	
-            	sourceFile = new File(fileName);
-            	
+            {    	           	
+            	String fileName = entry.getKey();           	
+            	sourceFile = new File(fileName);    	
             	RubyFile rubyFile = new RubyFile(sourceFile, sourceDirs);
             	
             	CoverageMeasuresBuilder fileCoverage = entry.getValue();

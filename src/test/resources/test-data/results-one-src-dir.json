@@ -1,7 +1,7 @@
 {
   "RSpec": {
     "coverage": {
-      "/home/mxsmith/Projects/Godaddy-Hosting/cPanel-api/lib/c_panel_api/c_panel_api.rb": [
+      "/path/to/source/srcFile.rb": [
         1,
         1,
         null,
@@ -34,7 +34,7 @@
         null,
         null
       ],
-      "/home/mxsmith/Projects/Godaddy-Hosting/cPanel-api/lib/c_panel_api/account_validator.rb": [
+      "/path/to/source/srcFile1.rb": [
         1,
         1,
         30,
@@ -73,7 +73,7 @@
         null,
         null
       ],
-      "/home/mxsmith/Projects/Godaddy-Hosting/cPanel-api/lib/c_panel_api/create_account_request.rb": [
+      "/path/to/source/srcFile2.rb": [
         1,
         1,
         1,
@@ -111,6 +111,6 @@
         null
       ]
     },
-    "timestamp": 1373391121
+    "timestamp": 1373414321
   }
 }

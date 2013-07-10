@@ -27,7 +27,6 @@ public class SimpleCovRcovSensorTest
 {
 	private static String RESULT_JSON_FILE_MUTLI_SRC_DIR = "src/test/resources/test-data/results.json";
 	private static String RESULT_JSON_FILE_ONE_SRC_DIR = "src/test/resources/test-data/results-one-src-dir.json";
-	private static String RESULT_NO_TESTS_JSON_FILE = "src/test/resources/test-data/results-zero-tests.json";
 	
 	private IMocksControl mocksControl;
 	private ModuleFileSystem moduleFileSystem;
@@ -82,7 +81,7 @@ public class SimpleCovRcovSensorTest
 	}
 	
 	@Test
-	public void testAnaluseWithOneSrcDir() throws IOException
+	public void testAnalyseWithOneSrcDir() throws IOException
 	{
 		Map<String, CoverageMeasuresBuilder> jsonResults = new SimpleCovRcovJsonParserImpl().parse(new File(RESULT_JSON_FILE_ONE_SRC_DIR));
 		

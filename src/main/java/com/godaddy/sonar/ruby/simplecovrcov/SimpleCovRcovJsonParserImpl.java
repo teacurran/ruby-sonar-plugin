@@ -12,18 +12,16 @@ import org.sonar.api.measures.CoverageMeasuresBuilder;
 
 import com.google.common.collect.Maps;
 
-public class SimpleCovRcovJsonParserImpl implements SimpleCovRcovJsonParser {
-
+public class SimpleCovRcovJsonParserImpl implements SimpleCovRcovJsonParser 
+{
 	public Map<String, CoverageMeasuresBuilder> parse(File file) throws IOException
-	{
-		
+	{		
 		Map<String, CoverageMeasuresBuilder> coveredFiles = Maps.newHashMap();
 		
 		File fileToFindCoverage = file;
-		//read content of file as one string, assumes the content of the file is in json format
+
 		String fileString = FileUtils.readFileToString(fileToFindCoverage, "UTF-8");
 		
-		//Parse the json string into a JSONObject, the coverageJsonObject will contain the map for files and their coverage
 		JSONObject resultJsonObject = (JSONObject) JSONValue.parse(fileString);			
 		JSONObject coverageJsonObj = (JSONObject) ((JSONObject) resultJsonObject.get("RSpec")).get("coverage");
 	
@@ -38,15 +36,9 @@ public class SimpleCovRcovJsonParserImpl implements SimpleCovRcovJsonParser {
 			//for each line in the coverage array
 			for(int i = 0; i < coverageArray.size(); i++)
 			{
-				//get the current line
 				Long line = (Long) coverageArray.toArray()[i];
-				//going to store that line as int, so it can be used with the setHits sonar api call
-				Integer intLine = 0;
-				
-				//the current line number will be the index of the array + 1, since there is not a line 0
-				int lineNumber = i+1;
-				
-				//if line is null, then that line was not covered, so set the value to 0
+				Integer intLine = 0;	
+				int lineNumber = i+1;	
 				if(line!=null)
 				{
 					intLine = line.intValue();
@@ -56,7 +48,5 @@ public class SimpleCovRcovJsonParserImpl implements SimpleCovRcovJsonParser {
 			coveredFiles.put(filePath, fileCoverage);
 		}
 		return coveredFiles;
-	}
-	
-	
+	}	
 }

@@ -1,7 +1,7 @@
 {
   "RSpec": {
     "coverage": {
-      "/home/mxsmith/Projects/Godaddy-Hosting/cPanel-common/lib/orion_api/orion_api.rb": [
+      "/project/source/subdir/file.rb": [
         1,
         1,
         null,
@@ -28,7 +28,7 @@
         null,
         null
       ],
-      "/home/mxsmith/Projects/Godaddy-Hosting/cPanel-common/lib/orion_api/orion_account_query.rb": [
+      "/project/source/subdir/file1.rb": [
         1,
         1,
         null,
@@ -159,7 +159,7 @@
         null,
         null
       ],
-      "/home/mxsmith/Projects/Godaddy-Hosting/cPanel-common/lib/orion_api/soap_client.rb": [
+      "/project/source/subdir/file2.rb": [
         1,
         null,
         1,
@@ -182,7 +182,7 @@
         null,
         null
       ],
-      "/home/mxsmith/Projects/Godaddy-Hosting/cPanel-common/lib/orion_api/orion_account_operation.rb": [
+      "/project/source/subdir/file3.rb": [
         1,
         1,
         null,
@@ -238,7 +238,7 @@
         null,
         null
       ],
-      "/home/mxsmith/Projects/Godaddy-Hosting/cPanel-common/lib/orion_api/orion_security.rb": [
+      "/project/source/subdir1/file.rb": [
         1,
         1,
         1,
@@ -275,7 +275,7 @@
         null,
         null
       ],
-      "/home/mxsmith/Projects/Godaddy-Hosting/cPanel-common/lib/domains_api/domains_api.rb": [
+      "/project/source/subdir1/file1.rb": [
         1,
         1,
         1,
@@ -327,7 +327,7 @@
         null,
         null
       ],
-      "/home/mxsmith/Projects/Godaddy-Hosting/cPanel-common/lib/dns_api/dns_api.rb": [
+      "/project/source/subdir1/file2.rb": [
         1,
         null,
         1,
@@ -461,7 +461,7 @@
         null,
         null
       ],
-      "/home/mxsmith/Projects/Godaddy-Hosting/cPanel-common/lib/shopper_services_api/shopper_services_api.rb": [
+      "/project/source/subdir2/file.rb": [
         1,
         1,
         null,
@@ -510,7 +510,7 @@
         null,
         null
       ],
-      "/home/mxsmith/Projects/Godaddy-Hosting/cPanel-common/app/models/mongo/account.rb": [
+      "/project/source1/subdir/file.rb": [
         1,
         null,
         1,
@@ -532,7 +532,7 @@
         null,
         null
       ],
-      "/home/mxsmith/Projects/Godaddy-Hosting/cPanel-common/app/models/mongo/server.rb": [
+      "/project/source1/subdir1/file.rb": [
         1,
         null,
         1,
@@ -564,7 +564,7 @@
         null,
         null
       ],
-      "/home/mxsmith/Projects/Godaddy-Hosting/cPanel-common/app/models/mongo/server_account_map.rb": [
+      "/project/source1/subdir1/file1.rb": [
         1,
         null,
         1,
@@ -578,7 +578,7 @@
         null,
         null
       ],
-      "/home/mxsmith/Projects/Godaddy-Hosting/cPanel-common/app/models/mongo/user_event.rb": [
+      "/project/source1/subdir2/file1.rb": [
         1,
         null,
         1,

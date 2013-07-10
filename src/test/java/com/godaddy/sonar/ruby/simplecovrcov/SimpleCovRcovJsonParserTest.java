@@ -19,7 +19,8 @@ import org.junit.Assert;
 
 public class SimpleCovRcovJsonParserTest extends TestCase
 {
-	private final static String JSON_FILE_NAME = "src/test/java/com/godaddy/sonar/ruby/resources/simplecovrcov/simple-cov-rcov.json";
+	private final static String JSON_FILE_NAME = "src/test/resources/test-data/results.json";
+	private final static String JSON_INVALID_JSON= "src/test/resources/test-data/results-invalid-json.json";
 	
 	private SimpleCovRcovJsonParserImpl parser = null;
 	@Before
@@ -40,17 +41,18 @@ public class SimpleCovRcovJsonParserTest extends TestCase
 		File reportFile = new File(JSON_FILE_NAME);
 		Map<String, CoverageMeasuresBuilder> coveredFiles = parser.parse(reportFile);
 		
-		String coveredFile1 = "/home/mxsmith/projects/GoDaddy-Hosting/cPanel-api/lib/c_panel_api/c_panel_api.rb";
-		String coveredFile2 = "/home/mxsmith/projects/GoDaddy-Hosting/cPanel-api/lib/c_panel_api/account_validator.rb";
-		String coveredFile3 = "/home/mxsmith/projects/GoDaddy-Hosting/cPanel-api/lib/c_panel_api/create_account_request.rb";
+		String coveredFile1 = "/home/mxsmith/Projects/Godaddy-Hosting/cPanel-common/lib/orion_api/orion_api.rb";
+		String coveredFile2 = "/home/mxsmith/Projects/Godaddy-Hosting/cPanel-common/lib/orion_api/orion_account_query.rb";
+		String coveredFile3 = "/home/mxsmith/Projects/Godaddy-Hosting/cPanel-common/lib/orion_api/soap_client.rb";
 		
-		assertEquals(coveredFiles.size(), 3);
+		assertEquals(coveredFiles.size(), 12);
 		assertEquals(coveredFiles.containsKey(coveredFile1), true);
 		assertEquals(coveredFiles.containsKey(coveredFile2), true);
 		assertEquals(coveredFiles.containsKey(coveredFile3), true);
 		
 		CoverageMeasuresBuilder builder1 = coveredFiles.get(coveredFile1);
 		System.out.println(builder1);
-		assertEquals(builder1.getCoveredLines(), 17);		
+		assertEquals(builder1.getCoveredLines(), 13);		
 	}
+	
 }

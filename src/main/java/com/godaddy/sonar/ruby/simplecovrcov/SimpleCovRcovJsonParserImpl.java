@@ -30,7 +30,6 @@ public class SimpleCovRcovJsonParserImpl implements SimpleCovRcovJsonParser {
 		//for each file in the coverage report
 		for(int j = 0; j < coverageJsonObj.keySet().size(); j++)
 		{
-
 			CoverageMeasuresBuilder fileCoverage = CoverageMeasuresBuilder.create();
 			
 			String filePath = coverageJsonObj.keySet().toArray()[j].toString();

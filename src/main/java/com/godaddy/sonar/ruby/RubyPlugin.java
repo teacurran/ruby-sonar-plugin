@@ -1,7 +1,7 @@
 package com.godaddy.sonar.ruby;
 
 import com.godaddy.sonar.ruby.core.Ruby;
-import com.godaddy.sonar.ruby.simplecov.SimpleCovCsvParserImpl;
+import com.godaddy.sonar.ruby.core.RubySourceImporter;
 import com.godaddy.sonar.ruby.simplecovrcov.SimpleCovRcovJsonParserImpl;
 import com.godaddy.sonar.ruby.simplecovrcov.SimpleCovRcovSensor;
 
@@ -24,9 +24,8 @@ public final class RubyPlugin extends SonarPlugin {
 		
 		// simplecov
 		extensions.add(SimpleCovRcovSensor.class);
-		extensions.add(SimpleCovCsvParserImpl.class);
 		extensions.add(SimpleCovRcovJsonParserImpl.class);
-		
+		extensions.add(RubySourceImporter.class);
 		return extensions;
 	}
 }

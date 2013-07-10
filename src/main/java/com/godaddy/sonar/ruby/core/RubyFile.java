@@ -2,6 +2,8 @@ package com.godaddy.sonar.ruby.core;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonar.api.resources.Language;
 import org.sonar.api.resources.Qualifiers;
 import org.sonar.api.resources.Resource;
@@ -15,7 +17,6 @@ import java.util.List;
 
 public class RubyFile extends Resource<RubyPackage> 
 {
-
 	private static final long serialVersionUID = 1L;
 
 	private String filename;
@@ -34,6 +35,7 @@ public class RubyFile extends Resource<RubyPackage>
 		
 		String dirName = null;
 		this.filename = StringUtils.substringBeforeLast(file.getName(), ".");
+		
 		this.packageKey = RubyPackage.DEFAULT_PACKAGE_NAME;
 		
 		if (sourceDirs != null) {
@@ -42,18 +44,21 @@ public class RubyFile extends Resource<RubyPackage>
 			if (relativePath != null) 
 			{
 				dirName = relativePath.dir().toString();
+							
 				this.filename = StringUtils.substringBeforeLast(relativePath.path(), ".");
-				
+								
 				if (dirName.indexOf(File.separator) >= 0) 
 				{
 					this.packageKey = StringUtils.strip(dirName, File.separator);
 					this.packageKey = StringUtils.replace(this.packageKey, File.separator, ".");
+					this.packageKey = StringUtils.substringAfterLast(this.packageKey, ".");
 				}
 			}
 		}
 		
 		String key = new StringBuilder().append(this.packageKey).append(".").append(this.filename).toString();
-		this.longName = key;		
+		this.longName = key;
+		
 		setKey(key);
 	}
 	
@@ -100,7 +105,8 @@ public class RubyFile extends Resource<RubyPackage>
 	{
 		String patternWithoutFileSuffix = StringUtils.substringBeforeLast(antPattern, ".");
 		WildcardPattern matcher = WildcardPattern.create(patternWithoutFileSuffix, ".");
-		return matcher.match(getKey());
+		String key = getKey();
+		return matcher.match(key);
 	}
 
 	@Override

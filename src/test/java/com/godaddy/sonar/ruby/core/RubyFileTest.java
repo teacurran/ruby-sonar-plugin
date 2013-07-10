@@ -30,6 +30,8 @@ public class RubyFileTest {
 	public void tearDown() {
 		
 	}
+	
+	
 
 	@Test(expected=IllegalArgumentException.class)
 	public void testRubyFileWithNullFile() {
@@ -46,7 +48,7 @@ public class RubyFileTest {
 	@Test
 	public void testGetParent() {
 		RubyPackage parent = rubyFile.getParent();
-		assertEquals("path.to.source", parent.getKey());
+		assertEquals("source", parent.getKey());
 	}
 
 	@Test
@@ -66,7 +68,7 @@ public class RubyFileTest {
 
 	@Test
 	public void testGetLongName() {
-		assertEquals("path.to.source.file", rubyFile.getLongName());
+		assertEquals("source.file", rubyFile.getLongName());
 	}
 
 	@Test
@@ -81,13 +83,13 @@ public class RubyFileTest {
 
 	@Test
 	public void testMatchFilePatternString() {
-		assertTrue(rubyFile.matchFilePattern("path.to.source.file.rb"));
+		assertTrue(rubyFile.matchFilePattern("source.file.rb"));
 	}
 
 	@Test
 	public void testToString() {
 		System.out.println(rubyFile.toString());
-		assertTrue(rubyFile.toString().contains("key=path.to.source.file,package=path.to.source,longName=path.to.source.file"));
+		assertTrue(rubyFile.toString().contains("key=source.file,package=source,longName=source.file"));
 	}
 
 }

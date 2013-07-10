@@ -1,6 +1,6 @@
 {
-  "RSpec": {
-    "coverage": {
+  <RSpec>: {
+    <coverage>: {
       "/home/mxsmith/Projects/Godaddy-Hosting/cPanel-common/lib/orion_api/orion_api.rb": [
         1,
         1,

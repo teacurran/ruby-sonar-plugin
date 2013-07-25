@@ -1,3 +1,4 @@
+[![Build Status](http://jenkins.notjomax.com/buildStatus/icon?job=ruby-sonar-plugin)](http://jenkins.notjomax.com/job/ruby-sonar-plugin/)
 Sonar Ruby Plugin    
 =================
 ##Description / Features

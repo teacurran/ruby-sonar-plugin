@@ -22,7 +22,6 @@ import org.sonar.api.scan.filesystem.ModuleFileSystem;
 
 import com.godaddy.sonar.ruby.core.RubyFile;
 
-
 public class SimpleCovRcovSensorTest 
 {
 	private static String RESULT_JSON_FILE_MUTLI_SRC_DIR = "src/test/resources/test-data/results.json";
@@ -48,6 +47,26 @@ public class SimpleCovRcovSensorTest
 	public void testConstructor() 
 	{	
 		assertNotNull(simpleCovRcovSensor);
+	}
+	
+	
+	@Test
+	public void analyseShouldCatchIOException() throws IOException
+	{
+		
+		File jsonFile = new File("coverage/.resultset.json");
+		sensorContext = mocksControl.createMock(SensorContext.class);
+		
+		expect(moduleFileSystem.sourceDirs()).andReturn(new ArrayList<File>());
+		expect(simpleCovRcovJsonParser.parse(jsonFile)).andThrow(new IOException());
+		
+		mocksControl.replay();
+		
+		simpleCovRcovSensor.analyse(new Project("key_name"), sensorContext);
+		
+		mocksControl.verify();
+		
+		assertTrue(true);
 	}
 	
 	@Test
@@ -79,6 +98,7 @@ public class SimpleCovRcovSensorTest
 		
 		mocksControl.verify();		
 	}
+	
 	
 	@Test
 	public void testAnalyseWithOneSrcDir() throws IOException

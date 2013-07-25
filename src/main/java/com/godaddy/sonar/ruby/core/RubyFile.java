@@ -13,104 +13,102 @@ import org.sonar.api.utils.WildcardPattern;
 import java.io.File;
 import java.util.List;
 
-public class RubyFile extends Resource<RubyPackage> 
+public class RubyFile extends Resource<RubyPackage>
 {
-	private static final long serialVersionUID = 1L;
+    private String filename;
+    private String longName;
+    private String packageKey;
+    private RubyPackage parent = null;
 
-	private String filename;
-	private String longName;
-	private String packageKey;
-	private RubyPackage parent = null;
+    public RubyFile(File file, List<File> sourceDirs)
+    {
+        super();
 
+        if (file == null)
+        {
+            throw new IllegalArgumentException("File cannot be null");
+        }
 
-	public RubyFile(File file, List<File> sourceDirs) 
-	{
-		super();
-		
-		if (file == null) {
-			throw new IllegalArgumentException("File cannot be null");
-		}
-		
-		String dirName = null;
-		this.filename = StringUtils.substringBeforeLast(file.getName(), ".");
-		
-		this.packageKey = RubyPackage.DEFAULT_PACKAGE_NAME;
-		
-		if (sourceDirs != null) {
-			PathResolver resolver = new PathResolver();
-			RelativePath relativePath = resolver.relativePath(sourceDirs, file);
-			if (relativePath != null) 
-			{
-				dirName = relativePath.dir().toString();
-							
-				this.filename = StringUtils.substringBeforeLast(relativePath.path(), ".");
-								
-				if (dirName.indexOf(File.separator) >= 0) 
-				{
-					this.packageKey = StringUtils.strip(dirName, File.separator);
-					this.packageKey = StringUtils.replace(this.packageKey, File.separator, ".");
-					this.packageKey = StringUtils.substringAfterLast(this.packageKey, ".");
-				}
-			}
-		}
-		
-		String key = new StringBuilder().append(this.packageKey).append(".").append(this.filename).toString();
-		this.longName = key;
-		
-		setKey(key);
-	}
-	
-	public RubyPackage getParent() 
-	{
-		if (parent == null) 
-		{
-			parent = new RubyPackage(packageKey);
-		}
-		return parent;
-	}
+        String dirName = null;
+        this.filename = StringUtils.substringBeforeLast(file.getName(), ".");
 
-	public String getDescription() 
-	{
-		return null;
-	}
+        this.packageKey = RubyPackage.DEFAULT_PACKAGE_NAME;
 
-	public Language getLanguage() 
-	{
-		return Ruby.INSTANCE;
-	}
+        if (sourceDirs != null)
+        {
+            PathResolver resolver = new PathResolver();
+            RelativePath relativePath = resolver.relativePath(sourceDirs, file);
+            if (relativePath != null)
+            {
+                dirName = relativePath.dir().toString();
 
-	public String getName() 
-	{
-		return filename;
-	}
+                this.filename = StringUtils.substringBeforeLast(relativePath.path(), ".");
 
-	public String getLongName() 
-	{
-		return longName;
-	}
+                if (dirName.indexOf(File.separator) >= 0)
+                {
+                    this.packageKey = StringUtils.strip(dirName, File.separator);
+                    this.packageKey = StringUtils.replace(this.packageKey, File.separator, ".");
+                    this.packageKey = StringUtils.substringAfterLast(this.packageKey, ".");
+                }
+            }
+        }
 
-	public String getScope() 
-	{
-		return Scopes.FILE;
-	}
+        String key = new StringBuilder().append(this.packageKey).append(".").append(this.filename).toString();
+        this.longName = key;
 
-	public String getQualifier() 
-	{
-		return Qualifiers.CLASS;
-	}
+        setKey(key);
+    }
 
-	public boolean matchFilePattern(String antPattern)
-	{
-		String patternWithoutFileSuffix = StringUtils.substringBeforeLast(antPattern, ".");
-		WildcardPattern matcher = WildcardPattern.create(patternWithoutFileSuffix, ".");
-		String key = getKey();
-		return matcher.match(key);
-	}
+    public RubyPackage getParent()
+    {
+        if (parent == null)
+        {
+            parent = new RubyPackage(packageKey);
+        }
+        return parent;
+    }
 
-	@Override
-	public String toString() 
-	{
-		return new ToStringBuilder(this).append("key", getKey())
-				.append("package", packageKey).append("longName", longName).toString();
-	}
+    public String getDescription()
+    {
+        return null;
+    }
+
+    public Language getLanguage()
+    {
+        return Ruby.INSTANCE;
+    }
+
+    public String getName()
+    {
+        return filename;
+    }
+
+    public String getLongName()
+    {
+        return longName;
+    }
+
+    public String getScope()
+    {
+        return Scopes.FILE;
+    }
+
+    public String getQualifier()
+    {
+        return Qualifiers.CLASS;
+    }
+
+    public boolean matchFilePattern(String antPattern)
+    {
+        String patternWithoutFileSuffix = StringUtils.substringBeforeLast(antPattern, ".");
+        WildcardPattern matcher = WildcardPattern.create(patternWithoutFileSuffix, ".");
+        String key = getKey();
+        return matcher.match(key);
+    }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this).append("key", getKey()).append("package", packageKey).append("longName", longName).toString();
+    }
 }

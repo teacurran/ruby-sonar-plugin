@@ -9,5 +9,5 @@ import org.sonar.api.measures.CoverageMeasuresBuilder;
 
 public interface SimpleCovRcovJsonParser extends BatchExtension
 {
-	public  Map<String, CoverageMeasuresBuilder> parse(File file) throws IOException;
+    Map<String, CoverageMeasuresBuilder> parse(File file) throws IOException;
 }

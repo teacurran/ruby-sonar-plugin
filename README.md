@@ -39,3 +39,10 @@ We used that plugin as a starting point for basic stats, then, updated the refer
 
 We referenced the [javascript sonar plugin](https://github.com/SonarCommunity/sonar-javascript) and the [php sonar plugin](https://github.com/SonarCommunity/sonar-php) for complexity and coverage implementation.
 Our complexity sensor and code coverage sensor borrow heavily from the javascript plugin's equivalent sensors.
+
+##Tool Versions
+* We are using Sonar 3.5.1 along with the Sonar 3.5.1 api (You must be using at least sonar 3.5 for the plugin to work)
+* We are using Sonar-Runner 2.2.2 to anaylze our projects
+* metric_fu 4.2.1 (latest at time of edit)
+* simplecov 0.7.1 (latest at time of edit)
+* simplecov-rcov 0.2.3 (latest at time of edit)

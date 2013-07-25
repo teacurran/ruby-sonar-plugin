@@ -1,4 +1,4 @@
-Sonar Ruby Plugin  
+Sonar Ruby Plugin    
 =================
 ##Description / Features
 The plugin enables analysis of Ruby projects within SonarQube

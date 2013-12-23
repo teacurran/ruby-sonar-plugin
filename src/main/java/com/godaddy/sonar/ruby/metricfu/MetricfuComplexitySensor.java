@@ -22,15 +22,15 @@ public class MetricfuComplexitySensor implements Sensor
 {
     private static final Logger LOG = LoggerFactory.getLogger(MetricfuComplexitySensor.class);
 
-    private MetricfuComplexityYamlParser metricfuComplexityYamlParser;
+    private MetricfuYamlParser metricfuYamlParser;
     private ModuleFileSystem moduleFileSystem;
     private static final Number[] FILES_DISTRIB_BOTTOM_LIMITS = { 0, 5, 10, 20, 30, 60, 90 };
     private static final Number[] FUNCTIONS_DISTRIB_BOTTOM_LIMITS = { 1, 2, 4, 6, 8, 10, 12, 20, 30 };
 
-    public MetricfuComplexitySensor(ModuleFileSystem moduleFileSystem, MetricfuComplexityYamlParser metricfuComplexityYamlParser)
+    public MetricfuComplexitySensor(ModuleFileSystem moduleFileSystem, MetricfuYamlParser metricfuYamlParser)
     {
         this.moduleFileSystem = moduleFileSystem;
-        this.metricfuComplexityYamlParser = metricfuComplexityYamlParser;
+        this.metricfuYamlParser = metricfuYamlParser;
     }
 
     public boolean shouldExecuteOnProject(Project project)
@@ -40,7 +40,6 @@ public class MetricfuComplexitySensor implements Sensor
 
     public void analyse(Project project, SensorContext context)
     {
-        File resultsFile = new File("tmp/metric_fu/report.yml");
         List<File> sourceDirs = moduleFileSystem.sourceDirs();
         List<File> rubyFilesInProject = moduleFileSystem.files(FileQuery.onSource().onLanguage(project.getLanguageKey()));
 
@@ -49,7 +48,7 @@ public class MetricfuComplexitySensor implements Sensor
             LOG.debug("analyzing functions for classes in the file: " + file.getName());
             try
             {
-                analyzeFile(file, sourceDirs, context, resultsFile);
+                analyzeFile(file, sourceDirs, context);
             } catch (IOException e)
             {
                 LOG.error("Can not analyze the file " + file.getAbsolutePath() + " for complexity");
@@ -57,10 +56,10 @@ public class MetricfuComplexitySensor implements Sensor
         }
     }
 
-    private void analyzeFile(File file, List<File> sourceDirs, SensorContext sensorContext, File resultsFile) throws IOException
+    private void analyzeFile(File file, List<File> sourceDirs, SensorContext sensorContext) throws IOException
     {
         RubyFile resource = new RubyFile(file, sourceDirs);
-        List<RubyFunction> functions = metricfuComplexityYamlParser.parseFunctions(resource.getName(), resultsFile);
+        List<SaikuroComplexity> functions = metricfuYamlParser.parseSaikuro(resource.getName());
 
         // if function list is empty, then return, do not compute any complexity
         // on that file
@@ -71,7 +70,7 @@ public class MetricfuComplexitySensor implements Sensor
 
         // COMPLEXITY
         int fileComplexity = 0;
-        for (RubyFunction function : functions)
+        for (SaikuroComplexity function : functions)
         {
             fileComplexity += function.getComplexity();
         }
@@ -87,7 +86,7 @@ public class MetricfuComplexitySensor implements Sensor
 
         // FUNCTION_COMPLEXITY_DISTRIBUTION
         RangeDistributionBuilder functionDistribution = new RangeDistributionBuilder(CoreMetrics.FUNCTION_COMPLEXITY_DISTRIBUTION, FUNCTIONS_DISTRIB_BOTTOM_LIMITS);
-        for (RubyFunction function : functions)
+        for (SaikuroComplexity function : functions)
         {
             functionDistribution.add(Double.valueOf(function.getComplexity()));
         }

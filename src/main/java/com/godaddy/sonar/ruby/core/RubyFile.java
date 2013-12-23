@@ -15,7 +15,8 @@ import java.util.List;
 
 public class RubyFile extends Resource<RubyPackage>
 {
-    private String filename;
+	private static final long serialVersionUID = 678217195520058883L;
+	private String filename;
     private String longName;
     private String packageKey;
     private RubyPackage parent = null;

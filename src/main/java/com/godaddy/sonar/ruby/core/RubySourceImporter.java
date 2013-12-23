@@ -58,7 +58,7 @@ public class RubySourceImporter extends AbstractSourceImporter
 
         List<File> sourceDirs = moduleFileSystem.sourceDirs();
         LOG.info("Got {} source dirs", sourceDirs.size());
-        List<File> sourceFiles = moduleFileSystem.files(FileQuery.onSource());
+        List<File> sourceFiles = moduleFileSystem.files(FileQuery.onSource().onLanguage(Ruby.KEY));
         LOG.info("Got {} source files", sourceFiles.size());
         parseDirs(context, sourceFiles, sourceDirs, false, sourceCharset);
         for (File directory : sourceDirs)

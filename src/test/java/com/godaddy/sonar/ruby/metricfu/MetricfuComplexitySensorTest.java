@@ -28,7 +28,7 @@ public class MetricfuComplexitySensorTest
 	private IMocksControl mocksControl;
 	private ModuleFileSystem moduleFileSystem;
 	private SensorContext sensorContext;
-	private MetricfuComplexityYamlParser metricfuComplexityYamlParser;
+	private MetricfuYamlParser metricfuYamlParser;
 	private MetricfuComplexitySensor metricfuComplexitySensor;
 	private Configuration config;
 	private Project project;
@@ -38,9 +38,9 @@ public class MetricfuComplexitySensorTest
 	{
 		mocksControl = EasyMock.createControl();
 		moduleFileSystem = mocksControl.createMock(ModuleFileSystem.class);
-		metricfuComplexityYamlParser = mocksControl.createMock(MetricfuComplexityYamlParser.class);
+		metricfuYamlParser = mocksControl.createMock(MetricfuYamlParser.class);
 		
-		metricfuComplexitySensor = new MetricfuComplexitySensor(moduleFileSystem, metricfuComplexityYamlParser);
+		metricfuComplexitySensor = new MetricfuComplexitySensor(moduleFileSystem, metricfuYamlParser);
 		config = mocksControl.createMock(Configuration.class);
 		expect(config.getString("sonar.language", "java")).andStubReturn("ruby");
 
@@ -82,13 +82,13 @@ public class MetricfuComplexitySensorTest
 		sourceFiles.add(new File("lib/some_path/foo_bar.rb"));
 
 		sensorContext = mocksControl.createMock(SensorContext.class);
-		List<RubyFunction> functions = new ArrayList<RubyFunction>();
-		functions.add(new RubyFunction("validate", 5, 10));
+		List<SaikuroComplexity> functions = new ArrayList<SaikuroComplexity>();
+		functions.add(new SaikuroComplexity("lib/some_path/foo_bar.rb", 5, "validate", 10));
 		
 		Measure measure = new Measure();
 		expect(moduleFileSystem.files(isA(FileQuery.class))).andReturn(sourceFiles);
 		expect(moduleFileSystem.sourceDirs()).andReturn(sourceDirs);
-		expect(metricfuComplexityYamlParser.parseFunctions(isA(String.class),isA(File.class))).andReturn(functions);
+		expect(metricfuYamlParser.parseSaikuro(isA(String.class))).andReturn(functions);
 		expect(sensorContext.saveMeasure(isA(RubyFile.class), isA(Metric.class), isA(Double.class))).andReturn(measure).times(2);
 		expect(sensorContext.saveMeasure(isA(RubyFile.class), isA(Measure.class))).andReturn(measure).times(2);
 		

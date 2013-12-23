@@ -7,10 +7,10 @@ import org.junit.Test;
 
 public class RubyFunctionTest {
 
-	RubyFunction function;
+	SaikuroComplexity function;
 	@Before
 	public void setUp() throws Exception {
-		function = new RubyFunction("foobar", 1, 10);
+		function = new SaikuroComplexity("filename", 10, "foobar", 1);
 	}
 
 	@Test
@@ -55,7 +55,7 @@ public class RubyFunctionTest {
 
 	@Test
 	public void testToString() {
-		String toString = "name: foobar complexity: 1 lines: 10";
+		String toString = "file: filename line: 10 name: foobar complexity: 1";
 		System.out.println(function.toString());
 		assertTrue(function.toString().equals(toString));
 	}

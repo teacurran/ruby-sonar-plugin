@@ -5,7 +5,10 @@ import com.godaddy.sonar.ruby.core.RubySourceCodeColorizer;
 import com.godaddy.sonar.ruby.core.RubySourceImporter;
 import com.godaddy.sonar.ruby.core.profiles.SonarWayProfile;
 import com.godaddy.sonar.ruby.metricfu.MetricfuComplexitySensor;
-import com.godaddy.sonar.ruby.metricfu.MetricfuComplexityYamlParserImpl;
+import com.godaddy.sonar.ruby.metricfu.MetricfuIssueSensor;
+import com.godaddy.sonar.ruby.metricfu.MetricfuYamlParser;
+import com.godaddy.sonar.ruby.metricfu.ReekRulesRepository;
+import com.godaddy.sonar.ruby.metricfu.RoodiRulesRepository;
 import com.godaddy.sonar.ruby.simplecovrcov.SimpleCovRcovJsonParserImpl;
 import com.godaddy.sonar.ruby.simplecovrcov.SimpleCovRcovSensor;
 
@@ -22,22 +25,29 @@ import java.util.List;
 @Properties({})
 public final class RubyPlugin extends SonarPlugin
 {
+	public static final String KEY_REPOSITORY_REEK = "reek";
+	public static final String NAME_REPOSITORY_REEK = "Reek";
 
-    public List<Class<? extends Extension>> getExtensions()
-    {
-        List<Class<? extends Extension>> extensions = new ArrayList<Class<? extends Extension>>();
-        extensions.add(Ruby.class);
-        extensions.add(SimpleCovRcovSensor.class);
-        extensions.add(SimpleCovRcovJsonParserImpl.class);
-        extensions.add(MetricfuComplexityYamlParserImpl.class);
-        extensions.add(RubySourceImporter.class);
-        extensions.add(RubySourceCodeColorizer.class);
-        extensions.add(RubySensor.class);
-        extensions.add(MetricfuComplexitySensor.class);
+	public static final String KEY_REPOSITORY_ROODI = "roodi";
+	public static final String NAME_REPOSITORY_ROODI = "Roodi";
 
-        // Profiles
-        extensions.add(SonarWayProfile.class);
+	public List<Class<? extends Extension>> getExtensions() {
+		List<Class<? extends Extension>> extensions = new ArrayList<Class<? extends Extension>>();
+		extensions.add(Ruby.class);
+		extensions.add(SimpleCovRcovSensor.class);
+		extensions.add(SimpleCovRcovJsonParserImpl.class);
+		extensions.add(MetricfuYamlParser.class);
+		extensions.add(RubySourceImporter.class);
+		extensions.add(RubySourceCodeColorizer.class);
+		extensions.add(RubySensor.class);
+		extensions.add(MetricfuComplexitySensor.class);
+		extensions.add(MetricfuIssueSensor.class);
+		extensions.add(ReekRulesRepository.class);
+		extensions.add(RoodiRulesRepository.class);
 
-        return extensions;
-    }
+		// Profiles
+		extensions.add(SonarWayProfile.class);
+
+		return extensions;
+	}
 }

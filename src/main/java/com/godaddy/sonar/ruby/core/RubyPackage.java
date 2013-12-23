@@ -11,7 +11,8 @@ import org.sonar.api.utils.WildcardPattern;
 @SuppressWarnings("rawtypes")
 public class RubyPackage extends Resource
 {
-    public static final String DEFAULT_PACKAGE_NAME = "[default]";
+	private static final long serialVersionUID = -8901912464767594618L;
+	public static final String DEFAULT_PACKAGE_NAME = "[default]";
 
     public RubyPackage(String key)
     {

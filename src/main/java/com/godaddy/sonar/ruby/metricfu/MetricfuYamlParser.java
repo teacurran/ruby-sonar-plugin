@@ -25,11 +25,11 @@ public class MetricfuYamlParser implements BatchExtension {
 	ArrayList<Map<String, Object>> roodiProblems = null;
 	ArrayList<Map<String, Object>> reekFiles = null;
 	ArrayList<Map<String, Object>> flayReasons = null;
-	
+
 	public MetricfuYamlParser() {
 		this(REPORT_FILE);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public MetricfuYamlParser(String filename) {
 
@@ -78,7 +78,7 @@ public class MetricfuYamlParser implements BatchExtension {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<CaneViolation> parseCane(File resultsFile) {
+	public List<CaneViolation> parseCane(String filename) {
 		if (caneViolations == null) {
 			Map<String, Object> caneResult = (Map<String, Object>) metricfuResult.get(":cane");
 			caneViolations = (Map<String, Object>) caneResult.get(":violations");
@@ -86,13 +86,40 @@ public class MetricfuYamlParser implements BatchExtension {
 
 		List<CaneViolation> violations = new ArrayList<CaneViolation>();
 		if (caneViolations != null) {
-			ArrayList<Map<String, Object>> caneViolationsLineResult = (ArrayList<Map<String, Object>>) caneViolations.get(":line_style");
+			ArrayList<Map<String, Object>> caneViolationsComplexityResult = (ArrayList<Map<String, Object>>) caneViolations.get(":abc_complexity");
+			for (Map<String, Object> caneViolationsLineResultRow : caneViolationsComplexityResult) {
+				String file = (String)caneViolationsLineResultRow.get(":file");
+				if (file.length() > 0 && file.contains(filename)) {
+					CaneComplexityViolation violation = new CaneComplexityViolation();
+					violation.setFile(file);
+					violation.setMethod((String)caneViolationsLineResultRow.get(":method"));
+					violation.setComplexity(Integer.parseInt((String)caneViolationsLineResultRow.get(":complexity")));
+					violations.add(violation);
+				}
+			}
 
+			ArrayList<Map<String, Object>> caneViolationsLineResult = (ArrayList<Map<String, Object>>) caneViolations.get(":line_style");
 			for (Map<String, Object> caneViolationsLineResultRow : caneViolationsLineResult) { 	
-				CaneViolation violation = new CaneViolation();
-				violation.setLine((Integer)caneViolationsLineResultRow.get(":line"));
-				violation.setViolation((String)caneViolationsLineResultRow.get(":description")); 
-				violations.add(violation);
+				String parts[] = ((String)caneViolationsLineResultRow.get(":line")).split(":");
+				if (parts[0].length() > 0 && parts[0].contains(filename)) {
+					CaneLineStyleViolation violation = new CaneLineStyleViolation();
+					violation.setFile(parts[0]);
+					violation.setLine(Integer.parseInt(parts[1]));
+					violation.setDescription((String)caneViolationsLineResultRow.get(":description")); 
+					violations.add(violation);
+				}
+			}
+
+			ArrayList<Map<String, Object>> caneViolationsCommentResult = (ArrayList<Map<String, Object>>) caneViolations.get(":comment");
+			for (Map<String, Object> caneViolationsLineResultRow : caneViolationsCommentResult) { 	
+				String parts[] = ((String)caneViolationsLineResultRow.get(":line")).split(":");
+				if (parts[0].length() > 0 && parts[0].contains(filename)) {
+					CaneCommentViolation violation = new CaneCommentViolation();
+					violation.setFile(parts[0]);
+					violation.setLine(Integer.parseInt(parts[1]));
+					violation.setClassName((String)caneViolationsLineResultRow.get(":class_name")); 
+					violations.add(violation);
+				}
 			}
 		}
 		return violations;
@@ -169,10 +196,10 @@ public class MetricfuYamlParser implements BatchExtension {
 			for (Map<String, Object> resultReason : flayReasons) {
 				FlayReason reason = new FlayReason();
 				reason.setReason(safeString((String) resultReason.get(":reason")));
-				
+
 				ArrayList<Map<String, Object>> resultMatches = (ArrayList<Map<String, Object>>) resultReason.get(":matches");
-				for (Map<String, Object> resultSmell : resultMatches) { 	
-					reason.addMatch(safeString((String)resultSmell.get(":name")), safeInteger((String)resultSmell.get(":line")));
+				for (Map<String, Object> resultDuplication : resultMatches) { 	
+					reason.addMatch(safeString((String)resultDuplication.get(":name")), safeInteger((String)resultDuplication.get(":line")));
 				}
 				reasons.add(reason);
 			}

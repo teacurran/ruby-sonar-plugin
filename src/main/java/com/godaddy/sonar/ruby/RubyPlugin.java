@@ -4,7 +4,9 @@ import com.godaddy.sonar.ruby.core.Ruby;
 import com.godaddy.sonar.ruby.core.RubySourceCodeColorizer;
 import com.godaddy.sonar.ruby.core.RubySourceImporter;
 import com.godaddy.sonar.ruby.core.profiles.SonarWayProfile;
+import com.godaddy.sonar.ruby.metricfu.CaneRulesRepository;
 import com.godaddy.sonar.ruby.metricfu.MetricfuComplexitySensor;
+import com.godaddy.sonar.ruby.metricfu.MetricfuDuplicationSensor;
 import com.godaddy.sonar.ruby.metricfu.MetricfuIssueSensor;
 import com.godaddy.sonar.ruby.metricfu.MetricfuYamlParser;
 import com.godaddy.sonar.ruby.metricfu.ReekRulesRepository;
@@ -25,6 +27,9 @@ import java.util.List;
 @Properties({})
 public final class RubyPlugin extends SonarPlugin
 {
+	public static final String KEY_REPOSITORY_CANE = "cane";
+	public static final String NAME_REPOSITORY_CANE = "Cane";
+
 	public static final String KEY_REPOSITORY_REEK = "reek";
 	public static final String NAME_REPOSITORY_REEK = "Reek";
 
@@ -41,7 +46,9 @@ public final class RubyPlugin extends SonarPlugin
 		extensions.add(RubySourceCodeColorizer.class);
 		extensions.add(RubySensor.class);
 		extensions.add(MetricfuComplexitySensor.class);
+		extensions.add(MetricfuDuplicationSensor.class);
 		extensions.add(MetricfuIssueSensor.class);
+		extensions.add(CaneRulesRepository.class);
 		extensions.add(ReekRulesRepository.class);
 		extensions.add(RoodiRulesRepository.class);
 

@@ -14,6 +14,7 @@ import org.sonar.api.issue.Issuable.IssueBuilder;
 import org.sonar.api.issue.Issue;
 import org.sonar.api.resources.Project;
 import org.sonar.api.rule.RuleKey;
+import org.sonar.api.rule.Severity;
 import org.sonar.api.scan.filesystem.FileQuery;
 import org.sonar.api.scan.filesystem.ModuleFileSystem;
 
@@ -69,6 +70,22 @@ public class MetricfuIssueSensor implements Sensor
         for (RoodiProblem problem : problems) {
         	RoodiCheck check = RoodiProblem.messageToKey(problem.getProblem());
         	addIssue(resource, problem.getLine(), RubyPlugin.KEY_REPOSITORY_ROODI, check.toString(), RoodiProblem.toSeverity(check), problem.getProblem());
+        }
+        
+        List<CaneViolation> violations = metricfuYamlParser.parseCane(resource.getName());        
+        for (CaneViolation violation : violations) {
+        	if (violation instanceof CaneCommentViolation) {
+        		CaneCommentViolation c = (CaneCommentViolation)violation;
+        	  	addIssue(resource, c.getLine(), RubyPlugin.KEY_REPOSITORY_CANE, c.getKey(), Severity.MINOR, 
+        	  		"Class ' " + c.getClassName() + "' requires explanatory comments on preceding line."); 
+        	} else if (violation instanceof CaneComplexityViolation) {
+          		CaneComplexityViolation c = (CaneComplexityViolation)violation;
+          	  	addIssue(resource, NO_LINE_NUMBER, RubyPlugin.KEY_REPOSITORY_CANE, c.getKey(), Severity.MAJOR, 
+          	  		"Method '" + c.getMethod() + "' has ABC complexity of " + c.getComplexity() + ".");                 		
+        	} else if (violation instanceof CaneLineStyleViolation) {
+          		CaneLineStyleViolation c = (CaneLineStyleViolation)violation;
+          	  	addIssue(resource, c.getLine(), RubyPlugin.KEY_REPOSITORY_CANE, c.getKey(), Severity.MINOR, c.getDescription() + ".");                 		                
+        	}
         }
     }
     

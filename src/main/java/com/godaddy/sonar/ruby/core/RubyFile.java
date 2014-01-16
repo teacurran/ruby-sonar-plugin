@@ -35,7 +35,6 @@ public class RubyFile extends Resource<RubyPackage>
         this.packageKey = RubyPackage.DEFAULT_PACKAGE_NAME;
         this.filename = StringUtils.substringBeforeLast(file.getName(), ".");
         this.longName = this.filename;
-        //String key = this.packageKey + "." + this.filename;
         String key = this.packageKey + File.separator + this.filename;
 
         if (sourceDirs != null)
@@ -46,8 +45,6 @@ public class RubyFile extends Resource<RubyPackage>
             {                	
                 this.packageKey = StringUtils.substringBeforeLast(relativePath.path(), File.separator);
                 this.packageKey = StringUtils.strip(this.packageKey, File.separator);
-                //this.packageKey = StringUtils.replace(this.packageKey, File.separator, ".");
-                //key = this.packageKey + "." + this.filename;
                 key = this.packageKey + File.separator + this.filename;
                 this.longName = key;
             }

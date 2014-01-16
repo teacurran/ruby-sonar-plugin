@@ -3,6 +3,7 @@ package com.godaddy.sonar.ruby.metricfu;
 import java.io.File;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -87,6 +88,7 @@ public class MetricfuDuplicationSensor implements Sensor
 				}
 				
 				// Now that we have the group XML, add it to each file.
+				HashSet<String> already_added = new HashSet<String>();
 				for (FlayReason.Match match : duplication.getMatches()) {
 					File file = new File(moduleFileSystem.baseDir(), match.getFile());
 					RubyFile resource = new RubyFile(file, sourceDirs);            	
@@ -97,8 +99,13 @@ public class MetricfuDuplicationSensor implements Sensor
 						d.appendChild(r);
 						duplicated_xml.put(key, d);
 					} 
-					Document d = duplicated_xml.get(key);
-					d.getFirstChild().appendChild(d.importNode(group, true));
+					
+					// If we have duplications in the same file, only add them once.
+					if (!already_added.contains(key)) {
+						Document d = duplicated_xml.get(key);
+						d.getFirstChild().appendChild(d.importNode(group, true));
+						already_added.add(key);
+					}
 				}
 			}
 			

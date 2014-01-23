@@ -75,15 +75,15 @@ public class MetricfuDuplicationSensor implements Sensor
 					}
 
 					if (duplicated_lines.containsKey(key)) {
-						duplicated_lines.put(key, duplicated_lines.get(key)+match.getNumLines());
+						duplicated_lines.put(key, duplicated_lines.get(key)+match.getLines());
 					} else {
-						duplicated_lines.put(key, match.getNumLines() * 1.0);
+						duplicated_lines.put(key, match.getLines() * 1.0);
 					} 
 					
 					Element block = doc.createElement("b");
 					block.setAttribute("r", key);
 					block.setAttribute("s", match.getStartLine().toString());
-					block.setAttribute("l", match.getNumLines().toString());  
+					block.setAttribute("l", match.getLines().toString());  
 					group.appendChild(block);					
 				}
 				

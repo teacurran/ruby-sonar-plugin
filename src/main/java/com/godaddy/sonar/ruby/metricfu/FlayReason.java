@@ -7,16 +7,20 @@ public class FlayReason {
 	public class Match {
 		private String file;
 		private Integer start;
-		private Integer end; // Currently flay does provide an end line, but when it does...
+		private Integer lines;
 		
-		public Match(String file, Integer start, Integer end) {
+		public Match(String file, Integer start, Integer lines) {
 			this.file = file;
 			this.start = start;
-			this.setEndLine(end);
+			this.lines = lines;
 		}
 		
 		public Match(String file, Integer start) {
-			this(file, start, start);
+			this(file, start, 1);
+		}
+		
+		public Match(String file) {
+			this(file, 1, 1);
 		}
 		
 		public String getFile() {
@@ -31,14 +35,11 @@ public class FlayReason {
 		public void setStartLine(Integer start) {
 			this.start = start;
 		}
-		public Integer getEndLine() {
-			return end;
+		public Integer getLines() {
+			return lines;
 		}
-		public void setEndLine(Integer end) {
-			this.end = end;
-		}
-		public Integer getNumLines() {
-			return end - start + 1;
+		public void setLines(Integer lines) {
+			this.lines = lines;
 		}
 	}
 

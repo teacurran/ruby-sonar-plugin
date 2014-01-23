@@ -12,6 +12,8 @@ import org.apache.log4j.Logger;
 import org.sonar.api.BatchExtension;
 import org.yaml.snakeyaml.Yaml;
 
+import com.godaddy.sonar.ruby.metricfu.FlayReason.Match;
+
 public class MetricfuYamlParser implements BatchExtension {
 	private Logger logger = Logger.getLogger(MetricfuYamlParser.class);
 
@@ -199,7 +201,24 @@ public class MetricfuYamlParser implements BatchExtension {
 
 				ArrayList<Map<String, Object>> resultMatches = (ArrayList<Map<String, Object>>) resultReason.get(":matches");
 				for (Map<String, Object> resultDuplication : resultMatches) { 	
-					reason.addMatch(safeString((String)resultDuplication.get(":name")), safeInteger((String)resultDuplication.get(":line")));
+					Match match = reason.new Match((String)resultDuplication.get(":name"));
+					
+					// If flay was run with --diff, we should have the number of lines in the duplication. If not, make it 1.
+					Integer line = safeInteger((String)resultDuplication.get(":line"));
+					if (line > 0) {
+						match.setStartLine(line);
+						match.setLines(1);
+					} else {
+						Integer start = safeInteger((String)resultDuplication.get(":start"));
+						if (start > 0) {
+							match.setStartLine(start);
+						}
+						Integer lines = safeInteger((String)resultDuplication.get(":lines"));
+						if (lines > 0) {
+							match.setLines(lines);
+						}
+					}
+					reason.getMatches().add(match);
 				}
 				reasons.add(reason);
 			}

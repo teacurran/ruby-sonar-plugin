@@ -86,6 +86,7 @@ public class MetricfuComplexitySensorTest
 		functions.add(new RubyFunction("validate", 5, 10));
 		
 		Measure measure = new Measure();
+		expect(moduleFileSystem.baseDir()).andReturn(new File("bar"));
 		expect(moduleFileSystem.files(isA(FileQuery.class))).andReturn(sourceFiles);
 		expect(moduleFileSystem.sourceDirs()).andReturn(sourceDirs);
 		expect(metricfuComplexityYamlParser.parseFunctions(isA(String.class),isA(File.class))).andReturn(functions);

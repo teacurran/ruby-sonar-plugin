@@ -23,7 +23,7 @@ public class MetricfuComplexityYamlParserTest extends TestCase
 	public void testParseFunction() throws IOException
 	{
 		File reportFile = new File(YML_FILE_NAME);
-		List<RubyFunction> rubyFunctions = parser.parseFunctions("lib/some_path/foo_bar.rb", reportFile);
+		List<RubyFunction> rubyFunctions = parser.parseFunctions("lib/some_path/foo_bar.rb", reportFile, "Saikuro");
 
 		RubyFunction rubyFunction0 = new RubyFunction("FooBar#validate_user_name", 4, 5);		
 		assertTrue(rubyFunctions.size()==2);

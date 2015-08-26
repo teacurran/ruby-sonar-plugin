@@ -1,92 +1,151 @@
 package com.godaddy.sonar.ruby.simplecovrcov;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.Sensor;
 import org.sonar.api.batch.SensorContext;
+import org.sonar.api.batch.fs.FileSystem;
+import org.sonar.api.batch.fs.InputFile;
+import org.sonar.api.config.PropertyDefinition;
+import org.sonar.api.config.PropertyDefinitions;
+import org.sonar.api.config.Settings;
 import org.sonar.api.measures.CoverageMeasuresBuilder;
 import org.sonar.api.measures.Measure;
 import org.sonar.api.resources.Project;
-import org.sonar.api.scan.filesystem.ModuleFileSystem;
+import org.sonar.api.scan.filesystem.PathResolver;
 
-import com.godaddy.sonar.ruby.core.Ruby;
-import com.godaddy.sonar.ruby.core.RubyFile;
+import com.godaddy.sonar.ruby.RubyPlugin;
+import com.google.common.collect.Lists;
 
-public class SimpleCovRcovSensor implements Sensor 
+public class SimpleCovRcovSensor implements Sensor
 {
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleCovRcovSensor.class);
+  private static final Logger     LOG = LoggerFactory.getLogger(SimpleCovRcovSensor.class);
 
-    private SimpleCovRcovJsonParser simpleCovRcovJsonParser;
-    private ModuleFileSystem moduleFileSystem;
+  private SimpleCovRcovJsonParser simpleCovRcovJsonParser;
+  private Settings                settings;
+  private FileSystem              fs;
+  private PropertyDefinitions definitions;
+  private PathResolver pathResolver;
 
-    /**
-     * Use of IoC to get Settings
-     */
-    public SimpleCovRcovSensor(ModuleFileSystem moduleFileSystem, SimpleCovRcovJsonParser simpleCovRcovJsonParser) 
-    {
-        this.moduleFileSystem = moduleFileSystem;
-        this.simpleCovRcovJsonParser = simpleCovRcovJsonParser;
+  private String reportPath = "coverage/.resultset.json";
+
+  /**
+   * Use of IoC to get Settings
+   */
+  public SimpleCovRcovSensor(Settings settings, FileSystem fs,
+      PathResolver pathResolver,
+      SimpleCovRcovJsonParser simpleCovRcovJsonParser) {
+    this.settings = settings;
+    this.definitions = settings.getDefinitions();
+    this.fs = fs;
+    this.simpleCovRcovJsonParser = simpleCovRcovJsonParser;
+    this.pathResolver = pathResolver;
+    
+    String reportpath_prop = settings.getString(RubyPlugin.SIMPLECOVRCOV_REPORT_PATH_PROPERTY);
+    if (null != reportpath_prop) {
+      this.reportPath = reportpath_prop;
+    }   
+  }
+
+  public boolean shouldExecuteOnProject(Project project)
+  {
+    // return Ruby.KEY.equals(fs.languages());
+    // This sensor is executed only when there are Ruby files
+    return fs.hasFiles(fs.predicates().hasLanguage("ruby"));
+  }
+
+  public void analyse(Project project, SensorContext context)
+  {
+    File report = pathResolver.relativeFile(fs.baseDir(), reportPath);
+    LOG.info("Calling analyse for report results: " + report.getPath());
+    if (!report.isFile()) {
+      LOG.warn("SimpleCovRcov report not found at {}", report);
+      return;
     }
+    // printReportFile(fileName);
 
-    public boolean shouldExecuteOnProject(Project project) 
+    List<InputFile> sourceFiles = Lists.newArrayList(fs.inputFiles(fs.predicates().hasLanguage("ruby")));
+
+    try
     {
-        return Ruby.KEY.equals(project.getLanguageKey());
+      LOG.info("Calling Calculate Metrics");
+      calculateMetrics(sourceFiles, report, context);
+    } catch (IOException e)
+    {
+      LOG.error("unable to calculate Metrics:", e);
     }
+  }
 
-    public void analyse(Project project, SensorContext context) 
+  private void printReportFile(String fileName) {
+    File jsonFile2 = new File(fileName);
+
+    FileInputStream fis;
+    try {
+      fis = new FileInputStream(jsonFile2);
+
+      // Construct BufferedReader from InputStreamReader
+      BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+
+      String line = null;
+      while ((line = br.readLine()) != null) {
+        System.out.println(line);
+      }
+
+      br.close();
+    } catch (FileNotFoundException e1) {
+      e1.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void calculateMetrics(List<InputFile> sourceFiles, File jsonFile, final SensorContext context) throws IOException
+  {
+    LOG.debug(jsonFile.toString());
+    Map<String, CoverageMeasuresBuilder> jsonResults = simpleCovRcovJsonParser.parse(jsonFile);
+
+    LOG.trace("jsonResults: " + jsonResults);
+    File sourceFile = null;
+    for (InputFile inputFile : sourceFiles)
     {
-        File jsonFile = new File("coverage/.resultset.json");
+      try
+      {
+        LOG.debug("SimpleCovRcovSensor processing file: " + inputFile.relativePath());
 
-        List<File> sourceDirs = moduleFileSystem.sourceDirs();
+        sourceFile = inputFile.file();
+        String jsonKey = inputFile.absolutePath();        
+        CoverageMeasuresBuilder fileCoverage = jsonResults.get(jsonKey);        
 
-        try 
+        if (fileCoverage != null)
         {
-            calculateMetrics(sourceDirs, jsonFile, context);
-        } 
-        catch (IOException e) 
-        {
-            LOG.error("unable to calculate Metrics");
+          for (Measure measure : fileCoverage.createMeasures())
+          {
+            LOG.debug("    Saving measure " + measure.getMetricKey());
+            context.saveMeasure(inputFile, measure);
+          }
         }
-    }
-
-    private void calculateMetrics(List<File> sourceDirs, File jsonFile, final SensorContext context) throws IOException 
-    {
-        Map<String, CoverageMeasuresBuilder> jsonResults = simpleCovRcovJsonParser.parse(jsonFile);
-
-        File sourceFile = null;
-        for (Entry<String, CoverageMeasuresBuilder> entry : jsonResults.entrySet()) 
+        
+      } catch (Exception e)
+      {
+        if (sourceFile != null)
         {
-            try 
-            {
-                String fileName = entry.getKey();
-                sourceFile = new File(fileName);
-                RubyFile rubyFile = new RubyFile(sourceFile, sourceDirs);
-
-                CoverageMeasuresBuilder fileCoverage = entry.getValue();
-                if (fileCoverage != null) 
-                {
-                    for (Measure measure : fileCoverage.createMeasures()) 
-                    {
-                        context.saveMeasure(rubyFile, measure);
-                    }
-                }
-            } 
-            catch (Exception e) 
-            {
-                if (sourceFile != null) 
-                {
-                    LOG.error("Unable to save metrics for file: " + sourceFile.getName(), e);
-                } 
-                else
-                {
-                    LOG.error("Unable to save metrics.", e);
-                }
-            }
+          LOG.error("Unable to save metrics for file: " + sourceFile.getName(), e);
         }
+        else
+        {
+          LOG.error("Unable to save metrics.", e);
+        }
+      }
     }
+  }
+
 }

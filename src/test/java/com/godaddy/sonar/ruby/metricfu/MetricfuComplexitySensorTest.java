@@ -63,11 +63,7 @@ public class MetricfuComplexitySensorTest
 		expect(config.getString("sonar.language", "java")).andStubReturn("ruby");
 
 		project = new Project("test project");	
-		Settings settings = new Settings();
-//		settings.setProperty(CoreProperties.PROJECT_LANGUAGE_PROPERTY, LanguageRuby.KEY);
-//		project.setSettings(settings);
-		project.setLanguage(LanguageRuby.INSTANCE);
-		
+		project.setLanguage(LanguageRuby.INSTANCE);		
 		project.setConfiguration(config);
 		
 	}
@@ -78,22 +74,6 @@ public class MetricfuComplexitySensorTest
 		assertNotNull(metricfuComplexitySensor);
 	}
 	
-//	@Test
-//	public void testShouldExecuteOnRubyProject()
-//	{		
-//		Configuration config = mocksControl.createMock(Configuration.class);
-//		expect(config.getString("sonar.language", "java")).andReturn("ruby");
-//		mocksControl.replay();
-//		
-//		Project project = new Project("test project");
-//		project.setConfiguration(config);
-//
-//		RubySensor sensor = new RubySensor(moduleFileSystem);
-//		sensor.shouldExecuteOnProject(project);
-//		
-//		mocksControl.verify();			
-//	}
-
 	@Test
 	public void testAnalyse() throws IOException
 	{

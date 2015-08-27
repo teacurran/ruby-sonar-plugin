@@ -50,4 +50,5 @@ Our complexity sensor and code coverage sensor borrow heavily from the javascrip
 ##Updates from Constant Contact
 * Updates were made for compatibility with Sonar 4.5.2 and it's api
 * Added support for configuring report paths for SimpleCovRcov and MetricFu via Sonar properties. They are available in the Code Coverage category and are configurable per project.
+* Added support to configure whether to use Saikuro or Cane for complexity metrics. May add support for obtaining complexity from flog as well
 * Several dependencies were also updated to more recent versions.

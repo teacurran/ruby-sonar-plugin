@@ -17,13 +17,13 @@ public class RubyPluginTest {
 	@Test
 	public void testGetExtensions() {
 		RubyPlugin plugin = new RubyPlugin();
-		List<Class<? extends Extension>> extensions = plugin.getExtensions();
+		List<Object> extensions = plugin.getExtensions();
 		assertTrue(extensions.size() > 0);
 		assertTrue(extensions.contains(Ruby.class));
 		assertTrue(extensions.contains(SimpleCovRcovSensor.class));
 		assertTrue(extensions.contains(SimpleCovRcovJsonParserImpl.class));
 		assertTrue(extensions.contains(MetricfuComplexityYamlParserImpl.class));
-		assertTrue(extensions.contains(RubySourceImporter.class));
+//		assertTrue(extensions.contains(RubySourceImporter.class));
 		assertTrue(extensions.contains(RubySourceCodeColorizer.class));
 		assertTrue(extensions.contains(RubySensor.class));
 		assertTrue(extensions.contains(MetricfuComplexitySensor.class));

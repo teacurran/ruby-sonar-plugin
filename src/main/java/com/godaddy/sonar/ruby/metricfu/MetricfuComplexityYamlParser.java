@@ -7,5 +7,5 @@ import org.sonar.api.BatchExtension;
 
 public interface MetricfuComplexityYamlParser extends BatchExtension
 {
-    List<RubyFunction> parseFunctions(String fileName, File resultsFile) throws IOException;
+    List<RubyFunction> parseFunctions(String fileName, File resultsFile, String complexityType) throws IOException;
 }

@@ -2,6 +2,7 @@ package com.godaddy.sonar.ruby.core;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.resources.Language;
 import org.sonar.api.resources.Qualifiers;
 import org.sonar.api.resources.Resource;
@@ -11,16 +12,22 @@ import org.sonar.api.scan.filesystem.PathResolver.RelativePath;
 import org.sonar.api.utils.WildcardPattern;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
-public class RubyFile extends Resource<RubyPackage>
+public class RubyFile extends Resource
 {
+    /**
+   * 
+   */
+    private static final long serialVersionUID = 1L;
     private String filename;
     private String longName;
     private String packageKey;
     private RubyPackage parent = null;
 
-    public RubyFile(File file, List<File> sourceDirs)
+    public RubyFile(File file, List<InputFile> sourceDirs)
     {
         super();
 
@@ -37,7 +44,8 @@ public class RubyFile extends Resource<RubyPackage>
         if (sourceDirs != null)
         {
             PathResolver resolver = new PathResolver();
-            RelativePath relativePath = resolver.relativePath(sourceDirs, file);
+            Collection<File> colSrcDirs = toFileCollection(sourceDirs);
+            RelativePath relativePath = resolver.relativePath(colSrcDirs, file);
             if (relativePath != null)
             {
                 dirName = relativePath.dir().toString();
@@ -106,9 +114,26 @@ public class RubyFile extends Resource<RubyPackage>
         return matcher.match(key);
     }
 
-    @Override
-    public String toString()
-    {
-        return new ToStringBuilder(this).append("key", getKey()).append("package", packageKey).append("longName", longName).toString();
+    public Collection<File> toFileCollection (List<InputFile> inputFiles){
+      Collection<File> listOfFiles = new ArrayList<File>();
+      for (InputFile afile : inputFiles) {
+          listOfFiles.add( afile.file());
+      }   
+      return listOfFiles;
     }
+    
+    @Override
+    public String toString() {
+      return "\nRubyFile [getParent()=" + getParent() + ", getLanguage()=" + getLanguage() + ", getName()=" + getName()
+          + ", getLongName()=" + getLongName() + ", getScope()=" + getScope() + ", getQualifier()=" + getQualifier()
+          + ", getKey()=" + getKey() + ", getId()=" + getId() + ", getPath()=" + getPath() + ", getEffectiveKey()="
+          + getEffectiveKey() + ", isExcluded()=" + isExcluded() + "]\n";
+    }
+
+//    @Override
+//    public String toString()
+//    {
+//        return new ToStringBuilder(this).append("key", getKey()).append("package", packageKey).append("longName", longName).toString();
+//    }
+
 }

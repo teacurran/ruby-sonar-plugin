@@ -28,6 +28,6 @@ public class Ruby extends AbstractLanguage
 
     public String[] getFileSuffixes()
     {
-        return new String[]{"rb"};
+        return new String[]{".rb"};
     }
 }

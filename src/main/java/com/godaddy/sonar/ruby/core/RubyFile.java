@@ -21,7 +21,7 @@ public class RubyFile extends Resource
     /**
    * 
    */
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 678217195520058883L;
     private String filename;
     private String longName;
     private String packageKey;
@@ -36,33 +36,25 @@ public class RubyFile extends Resource
             throw new IllegalArgumentException("File cannot be null");
         }
 
-        String dirName = null;
-        this.filename = StringUtils.substringBeforeLast(file.getName(), ".");
-
         this.packageKey = RubyPackage.DEFAULT_PACKAGE_NAME;
+        this.filename = StringUtils.substringBeforeLast(file.getName(), ".");
+        this.longName = this.filename;
+        String key = new StringBuilder().append(this.packageKey).append(".").append(this.filename).toString();
 
         if (sourceDirs != null)
         {
             PathResolver resolver = new PathResolver();
             Collection<File> colSrcDirs = toFileCollection(sourceDirs);
             RelativePath relativePath = resolver.relativePath(colSrcDirs, file);
-            if (relativePath != null)
+
+            if (relativePath != null && relativePath.path().indexOf(File.separator) >= 0)
             {
-                dirName = relativePath.dir().toString();
-
-                this.filename = StringUtils.substringBeforeLast(relativePath.path(), ".");
-
-                if (dirName.indexOf(File.separator) >= 0)
-                {
-                    this.packageKey = StringUtils.strip(dirName, File.separator);
-                    this.packageKey = StringUtils.replace(this.packageKey, File.separator, ".");
-                    this.packageKey = StringUtils.substringAfterLast(this.packageKey, ".");
-                }
+                this.packageKey = StringUtils.substringBeforeLast(relativePath.path(), File.separator);
+                this.packageKey = StringUtils.strip(this.packageKey, File.separator);
+                key = this.packageKey + File.separator + this.filename;
+                this.longName = key;
             }
         }
-
-        String key = new StringBuilder().append(this.packageKey).append(".").append(this.filename).toString();
-        this.longName = key;
 
         setKey(key);
     }
@@ -109,7 +101,7 @@ public class RubyFile extends Resource
     public boolean matchFilePattern(String antPattern)
     {
         String patternWithoutFileSuffix = StringUtils.substringBeforeLast(antPattern, ".");
-        WildcardPattern matcher = WildcardPattern.create(patternWithoutFileSuffix, ".");
+        WildcardPattern matcher = WildcardPattern.create(patternWithoutFileSuffix, File.separator);
         String key = getKey();
         return matcher.match(key);
     }

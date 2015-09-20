@@ -13,12 +13,17 @@ import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.config.Settings;
 import org.sonar.api.measures.CoreMetrics;
 import org.sonar.api.measures.PersistenceMode;
+import org.sonar.api.scan.filesystem.FileQuery;
+import org.sonar.api.scan.filesystem.ModuleFileSystem;
 import org.sonar.api.measures.RangeDistributionBuilder;
 import org.sonar.api.resources.Project;
 import org.sonar.api.scan.filesystem.PathResolver;
 
 import com.godaddy.sonar.ruby.RubyPlugin;
 import com.google.common.collect.Lists;
+
+import com.godaddy.sonar.ruby.core.Ruby;
+import com.godaddy.sonar.ruby.core.RubyFile;
 
 public class MetricfuComplexitySensor implements Sensor
 {
@@ -82,37 +87,38 @@ public class MetricfuComplexitySensor implements Sensor
 
   private void analyzeFile(File file, List<File> sourceDirs, SensorContext sensorContext) throws IOException
   {
-    LOG.info("functions are set");
-    String complexityType = settings.getString(RubyPlugin.METRICFU_COMPLEXITY_METRIC_PROPERTY);
+    RubyFile resource = new RubyFile(file, sourceDirs);
     List<SaikuroComplexity> functions = metricfuYamlParser.parseSaikuro(resource.getName());
 
     // if function list is empty, then return, do not compute any complexity
     // on that file
-    if (functions.isEmpty() || functions.size() == 0 || functions == null)
+    if (functions.isEmpty())
     {
-      return;
+        return;
     }
 
     // COMPLEXITY
-    LOG.info("COMPLEXITY are set" + functions.toString());
     int fileComplexity = 0;
     for (SaikuroComplexity function : functions)
     {
-      fileComplexity += function.getComplexity();
-      LOG.info("File complexity " + fileComplexity);
+        fileComplexity += function.getComplexity();
     }
+    sensorContext.saveMeasure(resource, CoreMetrics.COMPLEXITY, Double.valueOf(fileComplexity));
 
+    // FILE_COMPLEXITY_DISTRIBUTION
     RangeDistributionBuilder fileDistribution = new RangeDistributionBuilder(CoreMetrics.FILE_COMPLEXITY_DISTRIBUTION, FILES_DISTRIB_BOTTOM_LIMITS);
     fileDistribution.add(Double.valueOf(fileComplexity));
-    sensorContext.saveMeasure(inputFile, fileDistribution.build().setPersistenceMode(PersistenceMode.MEMORY));
+    sensorContext.saveMeasure(resource, fileDistribution.build().setPersistenceMode(PersistenceMode.MEMORY));
 
-    sensorContext.saveMeasure(inputFile, CoreMetrics.FUNCTION_COMPLEXITY, Double.valueOf(fileComplexity) / functions.size());
+    // FUNCTION_COMPLEXITY
+    sensorContext.saveMeasure(resource, CoreMetrics.FUNCTION_COMPLEXITY, Double.valueOf(fileComplexity) / functions.size());
 
+    // FUNCTION_COMPLEXITY_DISTRIBUTION
     RangeDistributionBuilder functionDistribution = new RangeDistributionBuilder(CoreMetrics.FUNCTION_COMPLEXITY_DISTRIBUTION, FUNCTIONS_DISTRIB_BOTTOM_LIMITS);
     for (SaikuroComplexity function : functions)
     {
-      functionDistribution.add(Double.valueOf(function.getComplexity()));
+        functionDistribution.add(Double.valueOf(function.getComplexity()));
     }
-    sensorContext.saveMeasure(inputFile, functionDistribution.build().setPersistenceMode(PersistenceMode.MEMORY));
+    sensorContext.saveMeasure(resource, functionDistribution.build().setPersistenceMode(PersistenceMode.MEMORY));
   }
 }

@@ -7,14 +7,6 @@ public class MetricBase {
     public MetricBase() {
     }
 
-    public int getComplexity() {
-        return complexity;
-    }
-
-    public void setComplexity(int complexity) {
-        this.complexity = complexity;
-    }
-
     public int getLine() {
         return line;
     }

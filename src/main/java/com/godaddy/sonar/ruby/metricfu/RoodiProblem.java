@@ -7,10 +7,8 @@ import java.util.regex.Pattern;
 
 import org.sonar.api.rule.Severity;
 
-public class RoodiProblem {
+public class RoodiProblem extends MetricBase {
 
-    private String file;
-    private int line = 0;
     private String problem;
 	
 	public static enum RoodiCheck {
@@ -90,22 +88,7 @@ public class RoodiProblem {
     }
 
     public RoodiProblem() {
-    }
-
-    public String getFile() {
-        return file;
-    }
-
-    public void setFile(String file) {
-        this.file = file;
-    }
-
-    public int getLine() {
-        return line;
-    }
-
-    public void setLine(int line) {
-        this.line = line;
+        line = 0;
     }
 
     public String getProblem() {

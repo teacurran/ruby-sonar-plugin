@@ -2,10 +2,9 @@ package com.godaddy.sonar.ruby.metricfu;
 
 import java.util.ArrayList;
 
-public class FlayReason {
+public class FlayReason extends MetricBase {
 	
 	public class Match {
-		private String file;
 		private Integer start;
 		private Integer lines;
 		
@@ -23,12 +22,6 @@ public class FlayReason {
 			this(file, 1, 1);
 		}
 		
-		public String getFile() {
-			return file;
-		}
-		public void setFile(String file) {
-			this.file = file;
-		}
 		public Integer getStartLine() {
 			return start;
 		}

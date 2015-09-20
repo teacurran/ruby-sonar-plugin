@@ -22,26 +22,29 @@ import com.google.common.collect.Lists;
 
 public class MetricfuComplexitySensor implements Sensor
 {
-  private static final Logger          LOG                             = LoggerFactory
-                                                                           .getLogger(MetricfuComplexitySensor.class);
+  private static final Logger   LOG = LoggerFactory.getLogger(MetricfuComplexitySensor.class);
 
-  private MetricfuComplexityYamlParser metricfuComplexityYamlParser;
-  private Settings                     settings;
-  private FileSystem                   fs;
+  private MetricfuYamlParser    metricfuYamlParser;
+  private Settings              settings;
+  private FileSystem            fs;
 
-  private static final Number[]        FILES_DISTRIB_BOTTOM_LIMITS     = { 0, 5, 10, 20, 30, 60, 90 };
-  private static final Number[]        FUNCTIONS_DISTRIB_BOTTOM_LIMITS = { 1, 2, 4, 6, 8, 10, 12, 20, 30 };
+  private static final Number[] FILES_DISTRIB_BOTTOM_LIMITS = { 0, 5, 10, 20, 30, 60, 90 };
+  private static final Number[] FUNCTIONS_DISTRIB_BOTTOM_LIMITS = { 1, 2, 4, 6, 8, 10, 12, 20, 30 };
 
-  private String                       reportPath                      = "tmp/metric_fu/report.yml";
-  private PathResolver                 pathResolver;
+  private String                reportPath = "tmp/metric_fu/report.yml";
+  private PathResolver          pathResolver;
 
   public MetricfuComplexitySensor(Settings settings, FileSystem fs,
       PathResolver pathResolver,
-      MetricfuComplexityYamlParser metricfuComplexityYamlParser) {
+      MetricfuYamlParser metricfuYamlParser) {
+
     this.settings = settings;
     this.fs = fs;
-    this.metricfuComplexityYamlParser = metricfuComplexityYamlParser;
+    this.metricfuYamlParser = metricfuYamlParser;
     this.pathResolver = pathResolver;
+
+    //TODO: this needs to be respected by all sensors
+    //because of the merge, the logic has moved to MetricfuYamlParser
     String reportpath_prop = settings.getString(RubyPlugin.METRICFU_REPORT_PATH_PROPERTY);
     if (null != reportpath_prop) {
       this.reportPath = reportpath_prop;
@@ -77,13 +80,11 @@ public class MetricfuComplexitySensor implements Sensor
     }
   }
 
-  private void analyzeFile(InputFile inputFile, SensorContext sensorContext, File resultsFile)
-      throws IOException
+  private void analyzeFile(File file, List<File> sourceDirs, SensorContext sensorContext) throws IOException
   {
     LOG.info("functions are set");
     String complexityType = settings.getString(RubyPlugin.METRICFU_COMPLEXITY_METRIC_PROPERTY);
-    List<RubyFunction> functions = metricfuComplexityYamlParser.parseFunctions(inputFile.file().getName(), resultsFile,
-        complexityType);
+    List<SaikuroComplexity> functions = metricfuYamlParser.parseSaikuro(resource.getName());
 
     // if function list is empty, then return, do not compute any complexity
     // on that file
@@ -95,23 +96,20 @@ public class MetricfuComplexitySensor implements Sensor
     // COMPLEXITY
     LOG.info("COMPLEXITY are set" + functions.toString());
     int fileComplexity = 0;
-    for (RubyFunction function : functions)
+    for (SaikuroComplexity function : functions)
     {
       fileComplexity += function.getComplexity();
       LOG.info("File complexity " + fileComplexity);
     }
 
-    RangeDistributionBuilder fileDistribution = new RangeDistributionBuilder(CoreMetrics.FILE_COMPLEXITY_DISTRIBUTION,
-        FILES_DISTRIB_BOTTOM_LIMITS);
+    RangeDistributionBuilder fileDistribution = new RangeDistributionBuilder(CoreMetrics.FILE_COMPLEXITY_DISTRIBUTION, FILES_DISTRIB_BOTTOM_LIMITS);
     fileDistribution.add(Double.valueOf(fileComplexity));
     sensorContext.saveMeasure(inputFile, fileDistribution.build().setPersistenceMode(PersistenceMode.MEMORY));
 
-    sensorContext.saveMeasure(inputFile, CoreMetrics.FUNCTION_COMPLEXITY,
-        Double.valueOf(fileComplexity) / functions.size());
+    sensorContext.saveMeasure(inputFile, CoreMetrics.FUNCTION_COMPLEXITY, Double.valueOf(fileComplexity) / functions.size());
 
-    RangeDistributionBuilder functionDistribution = new RangeDistributionBuilder(
-        CoreMetrics.FUNCTION_COMPLEXITY_DISTRIBUTION, FUNCTIONS_DISTRIB_BOTTOM_LIMITS);
-    for (RubyFunction function : functions)
+    RangeDistributionBuilder functionDistribution = new RangeDistributionBuilder(CoreMetrics.FUNCTION_COMPLEXITY_DISTRIBUTION, FUNCTIONS_DISTRIB_BOTTOM_LIMITS);
+    for (SaikuroComplexity function : functions)
     {
       functionDistribution.add(Double.valueOf(function.getComplexity()));
     }

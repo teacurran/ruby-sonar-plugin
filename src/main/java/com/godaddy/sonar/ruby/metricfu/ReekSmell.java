@@ -6,9 +6,8 @@ import java.util.Map;
 
 import org.sonar.api.rule.Severity;
 
-public class ReekSmell {
+public class ReekSmell extends MetricBase {
 
-    private String file;
     private String method;
     private String message;
     private String type;
@@ -85,14 +84,6 @@ public class ReekSmell {
     }
 
     public ReekSmell() {
-    }
-
-    public String getFile() {
-        return file;
-    }
-
-    public void setFile(String file) {
-        this.file = file;
     }
 
     public String getMethod() {

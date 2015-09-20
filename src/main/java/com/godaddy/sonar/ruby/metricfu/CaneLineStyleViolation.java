@@ -1,7 +1,6 @@
 package com.godaddy.sonar.ruby.metricfu;
 
 public class CaneLineStyleViolation extends CaneViolation {
-    private int line;
     private String description;
     private String key = "UnknownViolation";
 
@@ -16,14 +15,6 @@ public class CaneLineStyleViolation extends CaneViolation {
     
     public String getKey() {
     	return key;
-    }
-
-    public int getLine() {
-        return line;
-    }
-
-    public void setLine(int line) {
-        this.line = line;
     }
 
     public String getDescription() {

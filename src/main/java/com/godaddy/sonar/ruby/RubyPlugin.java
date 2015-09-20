@@ -16,7 +16,6 @@ import com.godaddy.sonar.ruby.core.RubySourceCodeColorizer;
 import com.godaddy.sonar.ruby.core.profiles.SonarWayProfile;
 import com.godaddy.sonar.ruby.metricfu.CaneRulesRepository;
 import com.godaddy.sonar.ruby.metricfu.MetricfuComplexitySensor;
-import com.godaddy.sonar.ruby.metricfu.MetricfuComplexityYamlParserImpl;
 import com.godaddy.sonar.ruby.metricfu.MetricfuDuplicationSensor;
 import com.godaddy.sonar.ruby.metricfu.MetricfuIssueSensor;
 import com.godaddy.sonar.ruby.metricfu.MetricfuYamlParser;
@@ -33,7 +32,6 @@ public final class RubyPlugin extends SonarPlugin
 {
   public static final String SIMPLECOVRCOV_REPORT_PATH_PROPERTY  = "sonar.simplecovrcov.reportPath";
   public static final String METRICFU_REPORT_PATH_PROPERTY       = "sonar.metricfu.reportPath";
-  public static final String METRICFU_COMPLEXITY_METRIC_PROPERTY = "sonar.metricfu.complexityMetric";
 
   public static final String KEY_REPOSITORY_CANE = "cane";
   public static final String NAME_REPOSITORY_CANE = "Cane";
@@ -50,7 +48,7 @@ public final class RubyPlugin extends SonarPlugin
     extensions.add(Ruby.class);
     extensions.add(SimpleCovRcovSensor.class);
     extensions.add(SimpleCovRcovJsonParserImpl.class);
-    extensions.add(MetricfuComplexityYamlParserImpl.class);
+    extensions.add(MetricfuYamlParser.class);
     extensions.add(RubySourceCodeColorizer.class);
     extensions.add(RubySensor.class);
     extensions.add(MetricfuComplexitySensor.class);
@@ -82,20 +80,6 @@ public final class RubyPlugin extends SonarPlugin
         .onQualifiers(Qualifiers.PROJECT)
         .build();
     extensions.add(simplecovrcovReportPath);
-
-    List<String> options = Arrays.asList("Saikuro", "Cane");
-
-    PropertyDefinition ComplexityMetric = PropertyDefinition.builder(METRICFU_COMPLEXITY_METRIC_PROPERTY)
-        .category(CoreProperties.CATEGORY_CODE_COVERAGE)
-        .subCategory("Ruby Coverage")
-        .name("MetricFu Complexity Metric")
-        .description("Type of complexity, Saikuro or Cane")
-        .defaultValue("Saikuro")
-        .onQualifiers(Qualifiers.PROJECT)
-        .type(PropertyType.SINGLE_SELECT_LIST)
-        .options(options)
-        .build();
-    extensions.add(ComplexityMetric);
 
     return extensions;
   }

@@ -1,8 +1,6 @@
 package com.godaddy.sonar.ruby.metricfu;
 
-public abstract class CaneViolation {
-    private String file;
-
+public abstract class CaneViolation extends MetricBase {
     public CaneViolation(String file) {
         this.file = file;
     }
@@ -11,14 +9,6 @@ public abstract class CaneViolation {
     }
 
     public abstract String getKey();
-    
-    public String getFile() {
-        return file;
-    }
-
-    public void setFile(String file) {
-        this.file = file;
-    }
 
     @Override
     public String toString() {

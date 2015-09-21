@@ -93,18 +93,19 @@ public class MetricfuIssueSensor implements Sensor
 
     public void addIssue(RubyFile resource, Integer line, String repo, String key, String severity, String message) {
         try {
-
             Issuable issuable = perspectives.as(Issuable.class, resource);
-            IssueBuilder bld = issuable.newIssueBuilder()
-                    .ruleKey(RuleKey.of(repo, key))
-                    .message(message)
-                    .severity(severity);
-            if (line != NO_LINE_NUMBER) {
-                bld = bld.line(line);
-            }
-            Issue issue = bld.build();
-            if (!issuable.addIssue(issue)) {
-                LOG.error("Failed to register issue.\nIssue Object : " + issue.toString());
+            if (issuable != null) {
+                IssueBuilder bld = issuable.newIssueBuilder()
+                        .ruleKey(RuleKey.of(repo, key))
+                        .message(message)
+                        .severity(severity);
+                if (line != NO_LINE_NUMBER) {
+                    bld = bld.line(line);
+                }
+                Issue issue = bld.build();
+                if (!issuable.addIssue(issue)) {
+                    LOG.error("Failed to register issue.\nIssue Object : " + issue.toString());
+                }
             }
         } catch(Exception e) {
             LOG.error("Error in create issue object" + e.getMessage());

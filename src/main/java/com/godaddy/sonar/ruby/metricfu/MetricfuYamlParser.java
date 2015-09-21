@@ -9,7 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonar.api.BatchExtension;
 import org.sonar.api.scan.filesystem.FileQuery;
 import org.sonar.api.scan.filesystem.ModuleFileSystem;
@@ -19,7 +20,7 @@ import com.godaddy.sonar.ruby.metricfu.FlayReason.Match;
 
 public class MetricfuYamlParser implements BatchExtension {
   private final ModuleFileSystem moduleFileSystem;
-  private Logger logger = Logger.getLogger(MetricfuYamlParser.class);
+  private static final Logger   LOG = LoggerFactory.getLogger(MetricfuYamlParser.class);
 
   private static final String REPORT_FILE = "tmp/metric_fu/report.yml";
   private static Pattern escapePattern = Pattern.compile("\\e\\[\\d+m", Pattern.CASE_INSENSITIVE);
@@ -46,7 +47,7 @@ public class MetricfuYamlParser implements BatchExtension {
 
       this.metricfuResult = (Map<String, Object>)yaml.loadAs(input, Map.class);
     } catch (FileNotFoundException e) {
-      logger.error(e);
+      LOG.error("Cannot find file ", e);
     }
   }
 
@@ -57,7 +58,7 @@ public class MetricfuYamlParser implements BatchExtension {
       saikuroFiles = (ArrayList<Map<String, Object>>) saikuro.get(":files");
     }
 
-    logger.debug("MetricfuYamlParser: parsing results from Saikuro");
+    LOG.debug("MetricfuYamlParser: parsing results from Saikuro");
 
     List<SaikuroComplexity> complexities = new ArrayList<SaikuroComplexity>();
     if (saikuroFiles != null) {
@@ -94,7 +95,7 @@ public class MetricfuYamlParser implements BatchExtension {
       caneViolations = (Map<String, Object>) caneResult.get(":violations");
     }
 
-    logger.debug("MetricfuYamlParser: parsing results from Cane");
+    LOG.debug("MetricfuYamlParser: parsing results from Cane");
 
     List<CaneViolation> violations = new ArrayList<CaneViolation>();
     if (caneViolations != null) {
@@ -146,7 +147,7 @@ public class MetricfuYamlParser implements BatchExtension {
       roodiProblems = (ArrayList<Map<String, Object>>) roodi.get(":problems");
     }
 
-    logger.debug("MetricfuYamlParser: parsing results from Roodi");
+    LOG.debug("MetricfuYamlParser: parsing results from Roodi");
 
     List<RoodiProblem> problems = new ArrayList<RoodiProblem>();
     if (roodiProblems != null) {
@@ -177,7 +178,7 @@ public class MetricfuYamlParser implements BatchExtension {
       reekFiles = (ArrayList<Map<String, Object>>) reek.get(":matches");
     }
 
-    logger.debug("MetricfuYamlParser: parsing results from Reek");
+    LOG.debug("MetricfuYamlParser: parsing results from Reek");
 
     List<ReekSmell> smells = new ArrayList<ReekSmell>();
     if (reekFiles != null) {
@@ -210,7 +211,7 @@ public class MetricfuYamlParser implements BatchExtension {
       flayReasons = (ArrayList<Map<String, Object>>) flay.get(":matches");
     }
 
-    logger.debug("MetricfuYamlParser: parsing results from Flay");
+    LOG.debug("MetricfuYamlParser: parsing results from Flay");
 
     List<FlayReason> reasons = new ArrayList<FlayReason>();
     if (flayReasons != null) {

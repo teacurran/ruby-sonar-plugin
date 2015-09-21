@@ -21,7 +21,7 @@ public class CaneRulesRepository extends RuleRepository {
 	@Override
 	public List<Rule> createRules() {
 		XMLRuleParser parser = new XMLRuleParser();
-		InputStream input = CaneRulesRepository.class.getResourceAsStream("/com/godaddy/sonar/ruby/metricfu/CaneRulesRepository.xml");
+		InputStream input = CaneRulesRepository.class.getResourceAsStream("/CaneRulesRepository.xml");
 		try {
 			return parser.parse(input);
 		} finally {

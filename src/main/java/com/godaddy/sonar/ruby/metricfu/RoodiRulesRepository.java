@@ -21,7 +21,7 @@ public class RoodiRulesRepository extends RuleRepository {
 	@Override
 	public List<Rule> createRules() {
 		XMLRuleParser parser = new XMLRuleParser();
-		InputStream input = RoodiRulesRepository.class.getResourceAsStream("/com/godaddy/sonar/ruby/metricfu/RoodiRulesRepository.xml");
+		InputStream input = RoodiRulesRepository.class.getResourceAsStream("/RoodiRulesRepository.xml");
 		try {
 			return parser.parse(input);
 		} finally {

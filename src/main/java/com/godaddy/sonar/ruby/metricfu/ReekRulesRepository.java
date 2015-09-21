@@ -21,7 +21,7 @@ public class ReekRulesRepository extends RuleRepository {
 	@Override
 	public List<Rule> createRules() {
 		XMLRuleParser parser = new XMLRuleParser();
-		InputStream input = ReekRulesRepository.class.getResourceAsStream("/com/godaddy/sonar/ruby/metricfu/ReekRulesRepository.xml");
+		InputStream input = ReekRulesRepository.class.getResourceAsStream("/ReekRulesRepository.xml");
 		try {
 			return parser.parse(input);
 		} finally {

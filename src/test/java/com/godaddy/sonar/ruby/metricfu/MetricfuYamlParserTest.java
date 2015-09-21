@@ -22,14 +22,14 @@ public class MetricfuYamlParserTest extends TestCase
     private IMocksControl mocksControl;
     private ModuleFileSystem moduleFileSystem;
 	private MetricfuYamlParser parser = null;
-	
+
 	@Before
 	public void setUp() throws Exception
 	{
         mocksControl = EasyMock.createControl();
         moduleFileSystem = mocksControl.createMock(ModuleFileSystem.class);
 	}
-		
+
 	@Test
 	public void testParseFunction() throws IOException
 	{
@@ -40,15 +40,15 @@ public class MetricfuYamlParserTest extends TestCase
         List<SaikuroComplexity> rubyFunctions = parser.parseSaikuro("lib/some_path/foo_bar.rb");
         mocksControl.verify();
 
-		SaikuroComplexity rubyFunction0 = new SaikuroComplexity("lib/some_path/foo_bar.rb", 5, "FooBar#validate_user_name", 4);		
+		SaikuroComplexity rubyFunction0 = new SaikuroComplexity("lib/some_path/foo_bar.rb", 5, "FooBar#validate_user_name", 4);
 		assertTrue(rubyFunctions.size()==2);
 		assertTrue(rubyFunctions.get(0).toString().equals(rubyFunction0.toString()));
-		
-		List<FlayReason> duplications = parser.parseFlay();        
+
+		List<FlayReason> duplications = parser.parseFlay();
 		for (FlayReason duplication : duplications) {
 			for (FlayReason.Match match : duplication.getMatches()) {
 				Log.debug(match.getFile() + ":" + match.getStartLine());
 			}
 		}
-	}	
+	}
 }

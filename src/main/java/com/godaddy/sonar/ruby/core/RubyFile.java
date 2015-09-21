@@ -19,7 +19,7 @@ import java.util.List;
 public class RubyFile extends Resource
 {
     /**
-   * 
+   *
    */
     private static final long serialVersionUID = 678217195520058883L;
     private String filename;
@@ -110,10 +110,10 @@ public class RubyFile extends Resource
       Collection<File> listOfFiles = new ArrayList<File>();
       for (InputFile afile : inputFiles) {
           listOfFiles.add( afile.file());
-      }   
+      }
       return listOfFiles;
     }
-    
+
     @Override
     public String toString() {
       return "\nRubyFile [getParent()=" + getParent() + ", getLanguage()=" + getLanguage() + ", getName()=" + getName()
@@ -121,11 +121,4 @@ public class RubyFile extends Resource
           + ", getKey()=" + getKey() + ", getId()=" + getId() + ", getPath()=" + getPath() + ", getEffectiveKey()="
           + getEffectiveKey() + ", isExcluded()=" + isExcluded() + "]\n";
     }
-
-//    @Override
-//    public String toString()
-//    {
-//        return new ToStringBuilder(this).append("key", getKey()).append("package", packageKey).append("longName", longName).toString();
-//    }
-
 }

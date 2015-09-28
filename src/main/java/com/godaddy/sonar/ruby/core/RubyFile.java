@@ -30,33 +30,23 @@ public class RubyFile extends Resource<RubyPackage>
             throw new IllegalArgumentException("File cannot be null");
         }
 
-        String dirName = null;
-        this.filename = StringUtils.substringBeforeLast(file.getName(), ".");
-
         this.packageKey = RubyPackage.DEFAULT_PACKAGE_NAME;
+        this.filename = StringUtils.substringBeforeLast(file.getName(), ".");
+        this.longName = this.filename;
+        String key = this.packageKey + File.separator + this.filename;
 
         if (sourceDirs != null)
         {
             PathResolver resolver = new PathResolver();
             RelativePath relativePath = resolver.relativePath(sourceDirs, file);
-            if (relativePath != null)
-            {
-                dirName = relativePath.dir().toString();
-
-                this.filename = StringUtils.substringBeforeLast(relativePath.path(), ".");
-
-                if (dirName.indexOf(File.separator) >= 0)
-                {
-                    this.packageKey = StringUtils.strip(dirName, File.separator);
-                    this.packageKey = StringUtils.replace(this.packageKey, File.separator, ".");
-                    this.packageKey = StringUtils.substringAfterLast(this.packageKey, ".");
-                }
+            if (relativePath != null && relativePath.path().indexOf(File.separator) >= 0)
+            {                	
+                this.packageKey = StringUtils.substringBeforeLast(relativePath.path(), File.separator);
+                this.packageKey = StringUtils.strip(this.packageKey, File.separator);
+                key = this.packageKey + File.separator + this.filename;
+                this.longName = key;
             }
-        }
-
-        String key = new StringBuilder().append(this.packageKey).append(".").append(this.filename).toString();
-        this.longName = key;
-
+        } 
         setKey(key);
     }
 
@@ -102,7 +92,7 @@ public class RubyFile extends Resource<RubyPackage>
     public boolean matchFilePattern(String antPattern)
     {
         String patternWithoutFileSuffix = StringUtils.substringBeforeLast(antPattern, ".");
-        WildcardPattern matcher = WildcardPattern.create(patternWithoutFileSuffix, ".");
+        WildcardPattern matcher = WildcardPattern.create(patternWithoutFileSuffix, File.separator);
         String key = getKey();
         return matcher.match(key);
     }

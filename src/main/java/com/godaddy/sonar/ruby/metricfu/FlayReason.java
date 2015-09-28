@@ -3,27 +3,43 @@ package com.godaddy.sonar.ruby.metricfu;
 import java.util.ArrayList;
 
 public class FlayReason {
-	
+
 	public class Match {
 		private String file;
-		private Integer line;
-		
-		public Match(String file, Integer line) {
+		private Integer start;
+		private Integer lines;
+
+		public Match(String file, Integer start, Integer lines) {
 			this.file = file;
-			this.line = line;
+			this.start = start;
+			this.lines = lines;
 		}
-		
+
+		public Match(String file, Integer start) {
+			this(file, start, 1);
+		}
+
+		public Match(String file) {
+			this(file, 1, 1);
+		}
+
 		public String getFile() {
 			return file;
 		}
 		public void setFile(String file) {
 			this.file = file;
 		}
-		public Integer getLine() {
-			return line;
+		public Integer getStartLine() {
+			return start;
 		}
-		public void setLine(Integer line) {
-			this.line = line;
+		public void setStartLine(Integer start) {
+			this.start = start;
+		}
+		public Integer getLines() {
+			return lines;
+		}
+		public void setLines(Integer lines) {
+			this.lines = lines;
 		}
 	}
 
@@ -48,9 +64,9 @@ public class FlayReason {
 	public ArrayList<Match> getMatches() {
 		return matches;
 	}
-	
-	public void addMatch(String file, Integer line) {
-		matches.add(new Match(file, line));
+
+	public void addMatch(String file, Integer start) {
+		matches.add(new Match(file, start));
 	}
 
     @Override

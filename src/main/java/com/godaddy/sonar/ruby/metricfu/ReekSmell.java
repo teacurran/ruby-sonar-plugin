@@ -9,7 +9,6 @@ import org.sonar.api.rule.Severity;
 public class ReekSmell {
 
     private String file;
-    private int line = 0;
     private String method;
     private String message;
     private String type;
@@ -78,9 +77,8 @@ public class ReekSmell {
 		keyToSeverityMap = Collections.unmodifiableMap(mapKeyToSeverity);
 	}
 
-    public ReekSmell(String file, Integer line, String method, String message, String type) {
+    public ReekSmell(String file, String method, String message, String type) {
         this.file = file;
-        this.line = line;
         this.method = method;
         this.message = message;
         this.type = type;
@@ -95,14 +93,6 @@ public class ReekSmell {
 
     public void setFile(String file) {
         this.file = file;
-    }
-
-    public int getLine() {
-        return line;
-    }
-
-    public void setLine(int line) {
-        this.line = line;
     }
 
     public String getMethod() {
@@ -131,7 +121,7 @@ public class ReekSmell {
 
     @Override
     public String toString() {
-        return "file: " + file + " line: " + line + " methods: " + method + " message: " + message + " type: " + type;
+        return "file: " + file + " methods: " + method + " message: " + message + " type: " + type;
     }
 
 	public static String toSeverity(Smell smell) {

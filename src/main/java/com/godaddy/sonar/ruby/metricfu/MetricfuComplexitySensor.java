@@ -10,10 +10,10 @@ import org.sonar.api.batch.Sensor;
 import org.sonar.api.batch.SensorContext;
 import org.sonar.api.measures.CoreMetrics;
 import org.sonar.api.measures.PersistenceMode;
+import org.sonar.api.measures.RangeDistributionBuilder;
 import org.sonar.api.resources.Project;
 import org.sonar.api.scan.filesystem.FileQuery;
 import org.sonar.api.scan.filesystem.ModuleFileSystem;
-import org.sonar.api.measures.RangeDistributionBuilder;
 
 import com.godaddy.sonar.ruby.core.Ruby;
 import com.godaddy.sonar.ruby.core.RubyFile;
@@ -40,7 +40,6 @@ public class MetricfuComplexitySensor implements Sensor
 
     public void analyse(Project project, SensorContext context)
     {
-        File resultsFile = new File(moduleFileSystem.baseDir(), "tmp/metric_fu/report.yml");
         List<File> sourceDirs = moduleFileSystem.sourceDirs();
         List<File> rubyFilesInProject = moduleFileSystem.files(FileQuery.onSource().onLanguage(project.getLanguageKey()));
 

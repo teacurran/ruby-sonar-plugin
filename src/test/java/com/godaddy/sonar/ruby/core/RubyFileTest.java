@@ -13,7 +13,8 @@ import org.sonar.api.resources.Qualifiers;
 import org.sonar.api.resources.Scopes;
 
 public class RubyFileTest {
-	protected final static String SOURCE_FILE = "/path/to/source/file.rb";
+	private final static String SOURCE_DIR = "/path/to";  // Equivalent to sonar.sources in project properties.
+	protected final static String SOURCE_FILE = SOURCE_DIR + "/source/file.rb";
 	
 	protected RubyFile rubyFile;
 	
@@ -21,7 +22,7 @@ public class RubyFileTest {
 	public void setUp() {
 		File file = new File(SOURCE_FILE);
 		List<File> sourceDirs = new ArrayList<File>();
-		sourceDirs.add(new File("/path/to/source"));
+		sourceDirs.add(new File(SOURCE_DIR));
 		
 		rubyFile = new RubyFile(file, sourceDirs);
 	}
@@ -42,7 +43,7 @@ public class RubyFileTest {
 	public void testRubyFileWithNullSourceDirs() {
 		File file = new File(SOURCE_FILE);
 		rubyFile = new RubyFile(file, null);
-		assertEquals("[default].file", rubyFile.getKey());
+		assertEquals("[default]/file", rubyFile.getKey());
 	}
 	
 	@Test
@@ -68,7 +69,7 @@ public class RubyFileTest {
 
 	@Test
 	public void testGetLongName() {
-		assertEquals("source.file", rubyFile.getLongName());
+		assertEquals("source/file", rubyFile.getLongName());
 	}
 
 	@Test
@@ -83,13 +84,13 @@ public class RubyFileTest {
 
 	@Test
 	public void testMatchFilePatternString() {
-		assertTrue(rubyFile.matchFilePattern("source.file.rb"));
+		assertTrue(rubyFile.matchFilePattern("source/file.rb"));
 	}
 
 	@Test
 	public void testToString() {
 		System.out.println(rubyFile.toString());
-		assertTrue(rubyFile.toString().contains("key=source.file,package=source,longName=source.file"));
+		assertTrue(rubyFile.toString().contains("key=source/file,package=source,longName=source/file"));
 	}
 
 }

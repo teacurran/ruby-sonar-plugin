@@ -5,6 +5,32 @@
   <rules>
 
     <rule>
+      <repositoryKey>cane</repositoryKey>
+      <key>CommentViolation</key>
+      <priority>MINOR</priority>
+    </rule>
+    <rule>
+      <repositoryKey>cane</repositoryKey>
+      <key>ComplexityViolation</key>
+      <priority>MAJOR</priority>
+    </rule>
+    <rule>
+      <repositoryKey>cane</repositoryKey>
+      <key>LineStyleLengthViolation</key>
+      <priority>MINOR</priority>
+    </rule>
+    <rule>
+      <repositoryKey>cane</repositoryKey>
+      <key>LineStyleTabsViolation</key>
+      <priority>MINOR</priority>
+    </rule>
+    <rule>
+      <repositoryKey>cane</repositoryKey>
+      <key>LineStyleWhitespaceViolation</key>
+      <priority>MINOR</priority>
+    </rule>
+
+    <rule>
       <repositoryKey>reek</repositoryKey>
       <key>Attribute</key>
       <priority>MINOR</priority>

@@ -14,6 +14,7 @@ import org.sonar.api.issue.Issuable.IssueBuilder;
 import org.sonar.api.issue.Issue;
 import org.sonar.api.resources.Project;
 import org.sonar.api.rule.RuleKey;
+import org.sonar.api.rule.Severity;
 import org.sonar.api.scan.filesystem.FileQuery;
 import org.sonar.api.scan.filesystem.ModuleFileSystem;
 
@@ -61,23 +62,36 @@ public class MetricfuIssueSensor implements Sensor
         RubyFile resource = new RubyFile(file, sourceDirs);
         List<ReekSmell> smells = metricfuYamlParser.parseReek(resource.getName());
 
-        LOG.debug("got " + smells.size() + " reek smells");
         for (ReekSmell smell : smells) {
-        	addIssue(resource, smell.getLine(), RubyPlugin.KEY_REPOSITORY_REEK, smell.getType(), ReekSmell.toSeverity(smell.getType()), smell.getMessage(), sensorContext);
+        	addIssue(resource, RubyPlugin.KEY_REPOSITORY_REEK, smell.getType(), ReekSmell.toSeverity(smell.getType()), smell.getMessage());
         }
 
         List<RoodiProblem> problems = metricfuYamlParser.parseRoodi(resource.getName());
-        LOG.debug("got " + smells.size() + " roodi problems");
         for (RoodiProblem problem : problems) {
         	RoodiCheck check = RoodiProblem.messageToKey(problem.getProblem());
-        	addIssue(resource, problem.getLine(), RubyPlugin.KEY_REPOSITORY_ROODI, check.toString(), RoodiProblem.toSeverity(check), problem.getProblem(), sensorContext);
+        	addIssue(resource, problem.getLine(), RubyPlugin.KEY_REPOSITORY_ROODI, check.toString(), RoodiProblem.toSeverity(check), problem.getProblem());
+        }
+
+        List<CaneViolation> violations = metricfuYamlParser.parseCane(resource.getName());
+        for (CaneViolation violation : violations) {
+        	if (violation instanceof CaneCommentViolation) {
+        		CaneCommentViolation c = (CaneCommentViolation)violation;
+        	  	addIssue(resource, c.getLine(), RubyPlugin.KEY_REPOSITORY_CANE, c.getKey(), Severity.MINOR,
+        	  		"Class ' " + c.getClassName() + "' requires explanatory comments on preceding line.");
+        	} else if (violation instanceof CaneComplexityViolation) {
+          		CaneComplexityViolation c = (CaneComplexityViolation)violation;
+          	  	addIssue(resource, NO_LINE_NUMBER, RubyPlugin.KEY_REPOSITORY_CANE, c.getKey(), Severity.MAJOR,
+          	  		"Method '" + c.getMethod() + "' has ABC complexity of " + c.getComplexity() + ".");
+        	} else if (violation instanceof CaneLineStyleViolation) {
+          		CaneLineStyleViolation c = (CaneLineStyleViolation)violation;
+          	  	addIssue(resource, c.getLine(), RubyPlugin.KEY_REPOSITORY_CANE, c.getKey(), Severity.MINOR, c.getDescription() + ".");
+        	}
         }
     }
 
-    public void addIssue(RubyFile resource, Integer line, String repo, String key, String severity, String message, SensorContext sensorContext) {
+    public void addIssue(RubyFile resource, Integer line, String repo, String key, String severity, String message) {
 		try {
-		    LOG.debug("Adding " + repo + " issue " + resource.getName() + ", line " + line + ": " + key + " (" + message + ")");
-		    sensorContext.index(resource);
+
     		Issuable issuable = perspectives.as(Issuable.class, resource);
     		IssueBuilder bld = issuable.newIssueBuilder()
     				.ruleKey(RuleKey.of(repo, key))
@@ -91,11 +105,11 @@ public class MetricfuIssueSensor implements Sensor
 				LOG.error("Failed to register issue.\nIssue Object : " + issue.toString());
 			}
 		} catch(Exception e) {
-			LOG.error("Error in create issue object " + e.getMessage(), e);
+			LOG.error("Error in create issue object" + e.getMessage());
 		}
     }
 
-    public void addIssue(RubyFile resource, String repo, String key, String severity, String message, SensorContext sensorContext) {
-    	addIssue(resource, NO_LINE_NUMBER, repo, key, severity, message, sensorContext);
+    public void addIssue(RubyFile resource, String repo, String key, String severity, String message) {
+    	addIssue(resource, NO_LINE_NUMBER, repo, key, severity, message);
     }
 }

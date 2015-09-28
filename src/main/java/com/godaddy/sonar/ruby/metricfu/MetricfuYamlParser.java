@@ -6,14 +6,13 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.sonar.api.BatchExtension;
-import org.sonar.api.scan.filesystem.ModuleFileSystem;
 import org.yaml.snakeyaml.Yaml;
+
+import com.godaddy.sonar.ruby.metricfu.FlayReason.Match;
 
 public class MetricfuYamlParser implements BatchExtension {
 	private Logger logger = Logger.getLogger(MetricfuYamlParser.class);
@@ -29,8 +28,8 @@ public class MetricfuYamlParser implements BatchExtension {
 	ArrayList<Map<String, Object>> reekFiles = null;
 	ArrayList<Map<String, Object>> flayReasons = null;
 
-	public MetricfuYamlParser(ModuleFileSystem moduleFileSystem) {
-		this(moduleFileSystem.baseDir() + "/" + REPORT_FILE);
+	public MetricfuYamlParser() {
+		this(REPORT_FILE);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -81,7 +80,7 @@ public class MetricfuYamlParser implements BatchExtension {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<CaneViolation> parseCane(File resultsFile) {
+	public List<CaneViolation> parseCane(String filename) {
 		if (caneViolations == null) {
 			Map<String, Object> caneResult = (Map<String, Object>) metricfuResult.get(":cane");
 			caneViolations = (Map<String, Object>) caneResult.get(":violations");
@@ -89,13 +88,40 @@ public class MetricfuYamlParser implements BatchExtension {
 
 		List<CaneViolation> violations = new ArrayList<CaneViolation>();
 		if (caneViolations != null) {
-			ArrayList<Map<String, Object>> caneViolationsLineResult = (ArrayList<Map<String, Object>>) caneViolations.get(":line_style");
+			ArrayList<Map<String, Object>> caneViolationsComplexityResult = (ArrayList<Map<String, Object>>) caneViolations.get(":abc_complexity");
+			for (Map<String, Object> caneViolationsLineResultRow : caneViolationsComplexityResult) {
+				String file = (String)caneViolationsLineResultRow.get(":file");
+				if (file.length() > 0 && file.contains(filename)) {
+					CaneComplexityViolation violation = new CaneComplexityViolation();
+					violation.setFile(file);
+					violation.setMethod((String)caneViolationsLineResultRow.get(":method"));
+					violation.setComplexity(Integer.parseInt((String)caneViolationsLineResultRow.get(":complexity")));
+					violations.add(violation);
+				}
+			}
 
+			ArrayList<Map<String, Object>> caneViolationsLineResult = (ArrayList<Map<String, Object>>) caneViolations.get(":line_style");
 			for (Map<String, Object> caneViolationsLineResultRow : caneViolationsLineResult) {
-				CaneViolation violation = new CaneViolation();
-				violation.setLine((Integer)caneViolationsLineResultRow.get(":line"));
-				violation.setViolation((String)caneViolationsLineResultRow.get(":description"));
-				violations.add(violation);
+				String parts[] = ((String)caneViolationsLineResultRow.get(":line")).split(":");
+				if (parts[0].length() > 0 && parts[0].contains(filename)) {
+					CaneLineStyleViolation violation = new CaneLineStyleViolation();
+					violation.setFile(parts[0]);
+					violation.setLine(Integer.parseInt(parts[1]));
+					violation.setDescription((String)caneViolationsLineResultRow.get(":description"));
+					violations.add(violation);
+				}
+			}
+
+			ArrayList<Map<String, Object>> caneViolationsCommentResult = (ArrayList<Map<String, Object>>) caneViolations.get(":comment");
+			for (Map<String, Object> caneViolationsLineResultRow : caneViolationsCommentResult) {
+				String parts[] = ((String)caneViolationsLineResultRow.get(":line")).split(":");
+				if (parts[0].length() > 0 && parts[0].contains(filename)) {
+					CaneCommentViolation violation = new CaneCommentViolation();
+					violation.setFile(parts[0]);
+					violation.setLine(Integer.parseInt(parts[1]));
+					violation.setClassName((String)caneViolationsLineResultRow.get(":class_name"));
+					violations.add(violation);
+				}
 			}
 		}
 		return violations;
@@ -144,25 +170,14 @@ public class MetricfuYamlParser implements BatchExtension {
 
 				if (file.length() > 0 && file.contains(filename)) {
 					ArrayList<Map<String, Object>> resultSmells = (ArrayList<Map<String, Object>>) resultFile.get(":code_smells");
-					for (Map<String, Object> resultSmell : resultSmells) {
-	                    TreeSet<Integer> lines = new TreeSet<Integer>();
-					    for (String line : (ArrayList<String>) resultSmell.get(":lines")) {
-					        lines.add(safeInteger(line));
-					    }
-					    if (lines.size() > 0) {
-					        String text = "";
-					        if (lines.size() > 1) {
-					            text = " (lines " + StringUtils.join(lines, ", ") + ")";
-					        }
-                            ReekSmell smell = new ReekSmell();
-                            smell.setFile(file);
-                            smell.setLine(lines.first());
-                            smell.setMethod(safeString((String)resultSmell.get(":method")));
-                            smell.setMessage(safeString((String)resultSmell.get(":message")) + text);
-                            smell.setType(safeString((String)resultSmell.get(":type")));
-                            smells.add(smell);
 
-					    }
+					for (Map<String, Object> resultSmell : resultSmells) {
+						ReekSmell smell = new ReekSmell();
+						smell.setFile(file);
+						smell.setMethod(safeString((String)resultSmell.get(":method")));
+						smell.setMessage(safeString((String)resultSmell.get(":message")));
+						smell.setType(safeString((String)resultSmell.get(":type")));
+						smells.add(smell);
 					}
 				}
 			}
@@ -185,8 +200,25 @@ public class MetricfuYamlParser implements BatchExtension {
 				reason.setReason(safeString((String) resultReason.get(":reason")));
 
 				ArrayList<Map<String, Object>> resultMatches = (ArrayList<Map<String, Object>>) resultReason.get(":matches");
-				for (Map<String, Object> resultSmell : resultMatches) {
-					reason.addMatch(safeString((String)resultSmell.get(":name")), safeInteger((String)resultSmell.get(":line")));
+				for (Map<String, Object> resultDuplication : resultMatches) {
+					Match match = reason.new Match((String)resultDuplication.get(":name"));
+
+					// If flay was run with --diff, we should have the number of lines in the duplication. If not, make it 1.
+					Integer line = safeInteger((String)resultDuplication.get(":line"));
+					if (line > 0) {
+						match.setStartLine(line);
+						match.setLines(1);
+					} else {
+						Integer start = safeInteger((String)resultDuplication.get(":start"));
+						if (start > 0) {
+							match.setStartLine(start);
+						}
+						Integer lines = safeInteger((String)resultDuplication.get(":lines"));
+						if (lines > 0) {
+							match.setLines(lines);
+						}
+					}
+					reason.getMatches().add(match);
 				}
 				reasons.add(reason);
 			}

@@ -6,10 +6,13 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.sonar.api.BatchExtension;
+import org.sonar.api.scan.filesystem.ModuleFileSystem;
 import org.yaml.snakeyaml.Yaml;
 
 public class MetricfuYamlParser implements BatchExtension {
@@ -25,11 +28,11 @@ public class MetricfuYamlParser implements BatchExtension {
 	ArrayList<Map<String, Object>> roodiProblems = null;
 	ArrayList<Map<String, Object>> reekFiles = null;
 	ArrayList<Map<String, Object>> flayReasons = null;
-	
-	public MetricfuYamlParser() {
-		this(REPORT_FILE);
+
+	public MetricfuYamlParser(ModuleFileSystem moduleFileSystem) {
+		this(moduleFileSystem.baseDir() + "/" + REPORT_FILE);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public MetricfuYamlParser(String filename) {
 
@@ -37,7 +40,7 @@ public class MetricfuYamlParser implements BatchExtension {
 			FileInputStream input = new FileInputStream(new File(filename));
 			Yaml yaml = new Yaml();
 
-			this.metricfuResult = (Map<String, Object>)yaml.loadAs(input, Map.class);
+			this.metricfuResult = yaml.loadAs(input, Map.class);
 		} catch (FileNotFoundException e) {
 			logger.error(e);
 		}
@@ -47,7 +50,7 @@ public class MetricfuYamlParser implements BatchExtension {
 	public List<SaikuroComplexity> parseSaikuro(String fileNameFromModule) {
 		if (saikuroFiles == null) {
 			Map<String, Object> saikuro = (Map<String, Object>) metricfuResult.get(":saikuro");
-			saikuroFiles = (ArrayList<Map<String, Object>>) saikuro.get(":files");			
+			saikuroFiles = (ArrayList<Map<String, Object>>) saikuro.get(":files");
 		}
 
 		List<SaikuroComplexity> complexities = new ArrayList<SaikuroComplexity>();
@@ -88,10 +91,10 @@ public class MetricfuYamlParser implements BatchExtension {
 		if (caneViolations != null) {
 			ArrayList<Map<String, Object>> caneViolationsLineResult = (ArrayList<Map<String, Object>>) caneViolations.get(":line_style");
 
-			for (Map<String, Object> caneViolationsLineResultRow : caneViolationsLineResult) { 	
+			for (Map<String, Object> caneViolationsLineResultRow : caneViolationsLineResult) {
 				CaneViolation violation = new CaneViolation();
 				violation.setLine((Integer)caneViolationsLineResultRow.get(":line"));
-				violation.setViolation((String)caneViolationsLineResultRow.get(":description")); 
+				violation.setViolation((String)caneViolationsLineResultRow.get(":description"));
 				violations.add(violation);
 			}
 		}
@@ -102,7 +105,7 @@ public class MetricfuYamlParser implements BatchExtension {
 	public List<RoodiProblem> parseRoodi(String filename) {
 		if (roodiProblems == null) {
 			Map<String, Object> roodi = (Map<String, Object>) metricfuResult.get(":roodi");
-			roodiProblems = (ArrayList<Map<String, Object>>) roodi.get(":problems");			
+			roodiProblems = (ArrayList<Map<String, Object>>) roodi.get(":problems");
 		}
 
 		List<RoodiProblem> problems = new ArrayList<RoodiProblem>();
@@ -130,7 +133,7 @@ public class MetricfuYamlParser implements BatchExtension {
 	public List<ReekSmell> parseReek(String filename) {
 		if (reekFiles == null) {
 			Map<String, Object> reek = (Map<String, Object>) metricfuResult.get(":reek");
-			reekFiles = (ArrayList<Map<String, Object>>) reek.get(":matches");			
+			reekFiles = (ArrayList<Map<String, Object>>) reek.get(":matches");
 		}
 
 		List<ReekSmell> smells = new ArrayList<ReekSmell>();
@@ -141,14 +144,25 @@ public class MetricfuYamlParser implements BatchExtension {
 
 				if (file.length() > 0 && file.contains(filename)) {
 					ArrayList<Map<String, Object>> resultSmells = (ArrayList<Map<String, Object>>) resultFile.get(":code_smells");
+					for (Map<String, Object> resultSmell : resultSmells) {
+	                    TreeSet<Integer> lines = new TreeSet<Integer>();
+					    for (String line : (ArrayList<String>) resultSmell.get(":lines")) {
+					        lines.add(safeInteger(line));
+					    }
+					    if (lines.size() > 0) {
+					        String text = "";
+					        if (lines.size() > 1) {
+					            text = " (lines " + StringUtils.join(lines, ", ") + ")";
+					        }
+                            ReekSmell smell = new ReekSmell();
+                            smell.setFile(file);
+                            smell.setLine(lines.first());
+                            smell.setMethod(safeString((String)resultSmell.get(":method")));
+                            smell.setMessage(safeString((String)resultSmell.get(":message")) + text);
+                            smell.setType(safeString((String)resultSmell.get(":type")));
+                            smells.add(smell);
 
-					for (Map<String, Object> resultSmell : resultSmells) { 	
-						ReekSmell smell = new ReekSmell();
-						smell.setFile(file);
-						smell.setMethod(safeString((String)resultSmell.get(":method")));
-						smell.setMessage(safeString((String)resultSmell.get(":message")));
-						smell.setType(safeString((String)resultSmell.get(":type")));
-						smells.add(smell);
+					    }
 					}
 				}
 			}
@@ -160,7 +174,7 @@ public class MetricfuYamlParser implements BatchExtension {
 	public List<FlayReason> parseFlay() {
 		if (flayReasons == null) {
 			Map<String, Object> flay = (Map<String, Object>) metricfuResult.get(":flay");
-			flayReasons = (ArrayList<Map<String, Object>>) flay.get(":matches");			
+			flayReasons = (ArrayList<Map<String, Object>>) flay.get(":matches");
 		}
 
 		List<FlayReason> reasons = new ArrayList<FlayReason>();
@@ -169,9 +183,9 @@ public class MetricfuYamlParser implements BatchExtension {
 			for (Map<String, Object> resultReason : flayReasons) {
 				FlayReason reason = new FlayReason();
 				reason.setReason(safeString((String) resultReason.get(":reason")));
-				
+
 				ArrayList<Map<String, Object>> resultMatches = (ArrayList<Map<String, Object>>) resultReason.get(":matches");
-				for (Map<String, Object> resultSmell : resultMatches) { 	
+				for (Map<String, Object> resultSmell : resultMatches) {
 					reason.addMatch(safeString((String)resultSmell.get(":name")), safeInteger((String)resultSmell.get(":line")));
 				}
 				reasons.add(reason);
@@ -188,7 +202,7 @@ public class MetricfuYamlParser implements BatchExtension {
 	}
 
 	private Integer safeInteger (String s) {
-		try {			
+		try {
 			return Integer.parseInt(s);
 		} catch (Exception e) {
 			return 0;

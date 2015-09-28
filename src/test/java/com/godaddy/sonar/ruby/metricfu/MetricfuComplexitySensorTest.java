@@ -86,6 +86,7 @@ public class MetricfuComplexitySensorTest
 		functions.add(new SaikuroComplexity("lib/some_path/foo_bar.rb", 5, "validate", 10));
 		
 		Measure measure = new Measure();
+		expect(moduleFileSystem.baseDir()).andReturn(new File("bar"));
 		expect(moduleFileSystem.files(isA(FileQuery.class))).andReturn(sourceFiles);
 		expect(moduleFileSystem.sourceDirs()).andReturn(sourceDirs);
 		expect(metricfuYamlParser.parseSaikuro(isA(String.class))).andReturn(functions);

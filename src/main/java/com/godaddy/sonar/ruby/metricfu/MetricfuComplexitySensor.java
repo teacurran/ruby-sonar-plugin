@@ -40,6 +40,7 @@ public class MetricfuComplexitySensor implements Sensor
 
     public void analyse(Project project, SensorContext context)
     {
+        File resultsFile = new File(moduleFileSystem.baseDir(), "tmp/metric_fu/report.yml");
         List<File> sourceDirs = moduleFileSystem.sourceDirs();
         List<File> rubyFilesInProject = moduleFileSystem.files(FileQuery.onSource().onLanguage(project.getLanguageKey()));
 

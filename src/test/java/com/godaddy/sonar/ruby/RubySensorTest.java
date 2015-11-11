@@ -1,105 +1,122 @@
 package com.godaddy.sonar.ruby;
 
+import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.isA;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.configuration.Configuration;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.sonar.api.batch.SensorContext;
+import org.sonar.api.batch.fs.FilePredicate;
+import org.sonar.api.batch.fs.FilePredicates;
+import org.sonar.api.batch.fs.FileSystem;
+import org.sonar.api.batch.fs.InputFile;
+import org.sonar.api.batch.fs.internal.DefaultInputFile;
+import org.sonar.api.config.Settings;
 import org.sonar.api.measures.Measure;
 import org.sonar.api.measures.Metric;
 import org.sonar.api.resources.Project;
-import org.sonar.api.scan.filesystem.FileQuery;
-import org.sonar.api.scan.filesystem.ModuleFileSystem;
 
-import com.godaddy.sonar.ruby.core.RubyFile;
-import com.godaddy.sonar.ruby.core.RubyPackage;
+import com.godaddy.sonar.ruby.core.LanguageRuby;
 
 public class RubySensorTest {
-	public static String INPUT_SOURCE_DIR = "src/test/resources/test-data";
-	public static String INPUT_SOURCE_FILE = "src/test/resources/test-data/hello_world.rb";
+  public static String   INPUT_SOURCE_DIR  = "src/test/resources/test-data";
+  public static String   INPUT_SOURCE_FILE = "src/test/resources/test-data/hello_world.rb";
 
-	private IMocksControl mocksControl;
-	private ModuleFileSystem moduleFileSystem;
-	private SensorContext sensorContext;
-	private Configuration config;
-	private Project project;
-	private List<File> sourceDirs;
-	private List<File> files;
-	
-	@Before
-	public void setUp() throws Exception {
-		mocksControl = EasyMock.createControl();
-		moduleFileSystem = mocksControl.createMock(ModuleFileSystem.class);
+  private IMocksControl  mocksControl;
+  private SensorContext  sensorContext;
+  private Project        project;
+  private List<File>     sourceDirs;
+  private List<File>     files;
 
-		config = mocksControl.createMock(Configuration.class);
-		expect(config.getString("sonar.language", "java")).andStubReturn("ruby");
+  private Settings       settings;
+  private FileSystem     fs;
+  private FilePredicates filePredicates;
+  private FilePredicate  filePredicate;
 
-		project = new Project("test project");
-		project.setConfiguration(config);
+  @Before
+  public void setUp() throws Exception {
+    mocksControl = EasyMock.createControl();
+    fs = mocksControl.createMock(FileSystem.class);
+    filePredicates = mocksControl.createMock(FilePredicates.class);
+    filePredicate = mocksControl.createMock(FilePredicate.class);
 
-		sensorContext = mocksControl.createMock(SensorContext.class);
+    project = new Project("test project");
+    settings = new Settings();
+    project.setLanguage(LanguageRuby.INSTANCE);
 
-		sourceDirs = new ArrayList<File>();
-		sourceDirs.add(new File(INPUT_SOURCE_DIR));
-		files = new ArrayList<File>();
-		files.add(new File(INPUT_SOURCE_FILE));
-	}
+    sensorContext = mocksControl.createMock(SensorContext.class);
 
-	@After
-	public void tearDown() throws Exception {
-	}
+    sourceDirs = new ArrayList<File>();
+    sourceDirs.add(new File(INPUT_SOURCE_DIR));
+    files = new ArrayList<File>();
+    files.add(new File(INPUT_SOURCE_FILE));
 
-	@Test
-	public void testRubySensor() {
-		RubySensor sensor = new RubySensor(moduleFileSystem);
-		assertNotNull(sensor);
-	}
+  }
 
-	@Test
-	public void testShouldExecuteOnProject() {
-		RubySensor sensor = new RubySensor(moduleFileSystem);
+  @After
+  public void tearDown() throws Exception {
+  }
 
-		mocksControl.replay();
-		
-		sensor.shouldExecuteOnProject(project);
-		
-		mocksControl.verify();	
-	}
+  @Test
+  public void testRubySensor() {
+    RubySensor sensor = new RubySensor(settings, fs);
+    assertNotNull(sensor);
+  }
 
-	@Test
-	public void testAnalyse() {
-		RubySensor sensor = new RubySensor(moduleFileSystem);
+  @Test
+  public void testShouldExecuteOnProject() {
+    RubySensor sensor = new RubySensor(settings, fs);
 
-		Measure measure = new Measure();
-		
-		expect(moduleFileSystem.files(isA(FileQuery.class))).andReturn(files).once();
-		expect(moduleFileSystem.sourceDirs()).andReturn(sourceDirs).once();
-		expect(moduleFileSystem.sourceCharset()).andReturn(Charset.defaultCharset()).once();
-		expect(sensorContext.saveMeasure(isA(RubyFile.class), isA(Metric.class), isA(Double.class))).andReturn(measure).times(5);
-		expect(sensorContext.saveMeasure(isA(RubyPackage.class), isA(Metric.class), isA(Double.class))).andReturn(measure).times(1);
+    expect(fs.predicates()).andReturn(filePredicates).times(1);
+    expect(fs.hasFiles(isA(FilePredicate.class))).andReturn(true).times(1);
+    expect(filePredicates.hasLanguage(eq("ruby"))).andReturn(filePredicate).times(1);
+    mocksControl.replay();
 
-		mocksControl.replay();
+    sensor.shouldExecuteOnProject(project);
 
-		sensor.analyse(project, sensorContext);
-		
-		mocksControl.verify();	
-	}
-	
-	@Test
-	public void testToString() {
-		RubySensor sensor = new RubySensor(moduleFileSystem);
-		String result = sensor.toString();
-		assertEquals("RubySensor", result);
-	}
+    mocksControl.verify();
+  }
+
+  @Test
+  public void testAnalyse() {
+    RubySensor sensor = new RubySensor(settings, fs);
+
+    Measure measure = new Measure();
+    List<InputFile> inputFiles = new ArrayList<InputFile>();
+    File aFile = new File(INPUT_SOURCE_FILE);
+    DefaultInputFile difFile = new DefaultInputFile(project.getKey(), INPUT_SOURCE_FILE);
+    difFile.setModuleBaseDir(FileSystems.getDefault().getPath("."));
+
+    inputFiles.add(difFile);
+
+    expect(sensorContext.saveMeasure(isA(InputFile.class), isA(Metric.class), isA(Double.class))).andReturn(measure).times(4);
+    expect(fs.predicates()).andReturn(filePredicates).times(1);
+    expect(filePredicates.hasLanguage(eq("ruby"))).andReturn(filePredicate).times(1);
+    expect(fs.inputFiles(isA(FilePredicate.class))).andReturn(inputFiles).times(1);
+    expect(fs.encoding()).andReturn(StandardCharsets.UTF_8).times(1);
+
+    mocksControl.replay();
+
+    sensor.analyse(project, sensorContext);
+    mocksControl.verify();
+  }
+
+  @Test
+  public void testToString() {
+    RubySensor sensor = new RubySensor(settings, fs);
+    String result = sensor.toString();
+    assertEquals("RubySensor", result);
+  }
 }

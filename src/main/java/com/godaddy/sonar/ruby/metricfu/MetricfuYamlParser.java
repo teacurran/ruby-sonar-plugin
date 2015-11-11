@@ -8,19 +8,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonar.api.BatchExtension;
+import org.sonar.api.batch.fs.FilePredicates;
+import org.sonar.api.batch.fs.FileSystem;
+import org.sonar.api.config.Settings;
+import org.sonar.api.resources.Project;
 import org.yaml.snakeyaml.Yaml;
 
+import com.godaddy.sonar.ruby.RubyPlugin;
 import com.godaddy.sonar.ruby.metricfu.FlayReason.Match;
 
 public class MetricfuYamlParser implements BatchExtension {
-	private Logger logger = Logger.getLogger(MetricfuYamlParser.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MetricfuYamlParser.class);
 
 	private static final String REPORT_FILE = "tmp/metric_fu/report.yml";
 	private static Pattern escapePattern = Pattern.compile("\\e\\[\\d+m", Pattern.CASE_INSENSITIVE);
 
-	protected Map<String, Object> metricfuResult = null;
+	private Map<String, Object> metricfuResult = null;
 
 	ArrayList<Map<String, Object>> saikuroFiles = null;
 	Map<String, Object> caneViolations = null;
@@ -28,201 +34,256 @@ public class MetricfuYamlParser implements BatchExtension {
 	ArrayList<Map<String, Object>> reekFiles = null;
 	ArrayList<Map<String, Object>> flayReasons = null;
 
-	public MetricfuYamlParser() {
-		this(REPORT_FILE);
+	public MetricfuYamlParser(Project project, Settings settings, FileSystem fileSystem) {
+		this(project, settings, fileSystem, REPORT_FILE);
 	}
 
 	@SuppressWarnings("unchecked")
-	public MetricfuYamlParser(String filename) {
+    public MetricfuYamlParser(Project project, Settings settings, FileSystem fileSystem, String filename) {
+        String prop = settings.getString(RubyPlugin.METRICFU_REPORT_PATH_PROPERTY);
+        if (prop != null) {
+            filename = prop;
+        }
 
-		try {
-			FileInputStream input = new FileInputStream(new File(filename));
-			Yaml yaml = new Yaml();
+        FilePredicates p = fileSystem.predicates();
+        LOG.error("Looking up report file: file:**/" + filename);
+        File report = new File(filename);
+		if (report.exists()) {
+		    LOG.error("Report file: " + report.getPath());
+            try {
+                FileInputStream input = new FileInputStream(report);
+                Yaml yaml = new Yaml();
 
-			this.metricfuResult = yaml.loadAs(input, Map.class);
-		} catch (FileNotFoundException e) {
-			logger.error(e);
+                this.metricfuResult = yaml.loadAs(input, Map.class);
+            } catch (FileNotFoundException e) {
+                LOG.error("File '" + report.getPath() + "' not found.", e);
+            }
+		} else {
+			LOG.error("File '" + filename + "' not found.");
+			Iterable<File> reports = fileSystem.files(p.matchesPathPattern("katello/"+filename));
+			LOG.error("Got some files = " + (reports.iterator().hasNext() ? "true" : " false"));
+			File ff = fileSystem.resolvePath("katello/"+filename);
+            LOG.error("Got a file = " + (ff != null ? "true" : " false"));
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<SaikuroComplexity> parseSaikuro(String fileNameFromModule) {
-		if (saikuroFiles == null) {
-			Map<String, Object> saikuro = (Map<String, Object>) metricfuResult.get(":saikuro");
-			saikuroFiles = (ArrayList<Map<String, Object>>) saikuro.get(":files");
-		}
+	public List<SaikuroClassComplexity> parseSaikuro(String filename) {
+	    LOG.error("parseSaikuro: " + filename);
+        List<SaikuroClassComplexity> complexities = new ArrayList<SaikuroClassComplexity>();
+	    if (metricfuResult == null) {
+	        LOG.warn("No metricfu results for saikuro.");
+	    } else {
+    		if (saikuroFiles == null) {
+    			Map<String, Object> saikuro = (Map<String, Object>) metricfuResult.get(":saikuro");
+    			if (saikuro != null) {
+    			    saikuroFiles = (ArrayList<Map<String, Object>>) saikuro.get(":files");
+    			}
+    		}
 
-		List<SaikuroComplexity> complexities = new ArrayList<SaikuroComplexity>();
-		if (saikuroFiles != null) {
+    		if (saikuroFiles != null) {
+    			for (Map<String, Object> fileInfo : saikuroFiles) {
+    				String file = (String) fileInfo.get(":filename");
+    				LOG.error("  checking: " + file);
+    				if (file.equals(filename)) {
+    					ArrayList<Map<String, Object>> classes = (ArrayList<Map<String, Object>>) fileInfo.get(":classes");
 
-			for (Map<String, Object> fileInfo : saikuroFiles) {
-				String fileNameFromResults = (String) fileInfo.get(":filename");
+    					for (Map<String, Object> cls : classes) {
+                            SaikuroClassComplexity c = new SaikuroClassComplexity();
+                            c.setFile(file);
+                            c.setName((String) cls.get(":class_name"));
+                            c.setLines((Integer) cls.get(":lines"));
+                            c.setComplexity((Integer) cls.get(":complexity"));
 
-				if (fileNameFromResults.contains(fileNameFromModule)) {
-					ArrayList<Map<String, Object>> classesInfo = (ArrayList<Map<String, Object>>) fileInfo.get(":classes");
-
-					for (Map<String, Object> classInfo : classesInfo) {
-						ArrayList<Map<String, Object>> methods = (ArrayList<Map<String, Object>>) classInfo.get(":methods");
-
-						for (Map<String, Object> method : methods) {
-							SaikuroComplexity complexity = new SaikuroComplexity();
-							complexity.setFile(fileNameFromResults);
-							complexity.setName((String) method.get(":name"));
-							complexity.setComplexity((Integer) method.get(":complexity"));
-							complexity.setLine((Integer) method.get(":lines"));
-							complexities.add(complexity);
-						}
-					}
-				}
-			}
-		}
+                            ArrayList<Map<String, Object>> methods = (ArrayList<Map<String, Object>>) cls.get(":methods");
+    						for (Map<String, Object> method : methods) {
+    						    SaikuroMethodComplexity m = new SaikuroMethodComplexity();
+    							m.setName((String) method.get(":name"));
+    							m.setComplexity((Integer) method.get(":complexity"));
+    							m.setLine((Integer) method.get(":lines"));
+    							LOG.error("    adding method: " + m.getName() + ", complexit = " + m.getComplexity());
+    							c.getMethods().add(m);
+    						}
+    						LOG.error("    adding class: " + c.getName() + ", complexity = " + c.getComplexity());
+    						complexities.add(c);
+    					}
+    					break;
+    				}
+    			}
+    		}
+	    }
 		return complexities;
 	}
 
 	@SuppressWarnings("unchecked")
 	public List<CaneViolation> parseCane(String filename) {
-		if (caneViolations == null) {
-			Map<String, Object> caneResult = (Map<String, Object>) metricfuResult.get(":cane");
-			caneViolations = (Map<String, Object>) caneResult.get(":violations");
-		}
+        List<CaneViolation> violations = new ArrayList<CaneViolation>();
+        if (metricfuResult == null) {
+            LOG.warn("No metricfu results for cane.");
+        } else {
+    		if (caneViolations == null) {
+    			Map<String, Object> caneResult = (Map<String, Object>) metricfuResult.get(":cane");
+    			if (caneResult != null) {
+    			    caneViolations = (Map<String, Object>) caneResult.get(":violations");
+    			}
+    		}
 
-		List<CaneViolation> violations = new ArrayList<CaneViolation>();
-		if (caneViolations != null) {
-			ArrayList<Map<String, Object>> caneViolationsComplexityResult = (ArrayList<Map<String, Object>>) caneViolations.get(":abc_complexity");
-			for (Map<String, Object> caneViolationsLineResultRow : caneViolationsComplexityResult) {
-				String file = (String)caneViolationsLineResultRow.get(":file");
-				if (file.length() > 0 && file.contains(filename)) {
-					CaneComplexityViolation violation = new CaneComplexityViolation();
-					violation.setFile(file);
-					violation.setMethod((String)caneViolationsLineResultRow.get(":method"));
-					violation.setComplexity(Integer.parseInt((String)caneViolationsLineResultRow.get(":complexity")));
-					violations.add(violation);
-				}
-			}
+    		if (caneViolations != null) {
+    			ArrayList<Map<String, Object>> caneViolationsComplexityResult = (ArrayList<Map<String, Object>>) caneViolations.get(":abc_complexity");
+    			for (Map<String, Object> caneViolationsLineResultRow : caneViolationsComplexityResult) {
+    				String file = (String)caneViolationsLineResultRow.get(":file");
+                    if (filename.equals(file)) {
+    					CaneComplexityViolation violation = new CaneComplexityViolation();
+    					violation.setFile(file);
+    					violation.setMethod((String)caneViolationsLineResultRow.get(":method"));
+    					violation.setComplexity(Integer.parseInt((String)caneViolationsLineResultRow.get(":complexity")));
+    					violations.add(violation);
+    				}
+    			}
 
-			ArrayList<Map<String, Object>> caneViolationsLineResult = (ArrayList<Map<String, Object>>) caneViolations.get(":line_style");
-			for (Map<String, Object> caneViolationsLineResultRow : caneViolationsLineResult) {
-				String parts[] = ((String)caneViolationsLineResultRow.get(":line")).split(":");
-				if (parts[0].length() > 0 && parts[0].contains(filename)) {
-					CaneLineStyleViolation violation = new CaneLineStyleViolation();
-					violation.setFile(parts[0]);
-					violation.setLine(Integer.parseInt(parts[1]));
-					violation.setDescription((String)caneViolationsLineResultRow.get(":description"));
-					violations.add(violation);
-				}
-			}
+    			ArrayList<Map<String, Object>> caneViolationsLineResult = (ArrayList<Map<String, Object>>) caneViolations.get(":line_style");
+    			for (Map<String, Object> caneViolationsLineResultRow : caneViolationsLineResult) {
+    				String parts[] = ((String)caneViolationsLineResultRow.get(":line")).split(":");
+    				if (parts[0].length() > 0 && parts[0].equals(filename)) {
+    					CaneLineStyleViolation violation = new CaneLineStyleViolation();
+    					violation.setFile(parts[0]);
+    					violation.setLine(Integer.parseInt(parts[1]));
+    					violation.setDescription((String)caneViolationsLineResultRow.get(":description"));
+    					violations.add(violation);
+    				}
+    			}
 
-			ArrayList<Map<String, Object>> caneViolationsCommentResult = (ArrayList<Map<String, Object>>) caneViolations.get(":comment");
-			for (Map<String, Object> caneViolationsLineResultRow : caneViolationsCommentResult) {
-				String parts[] = ((String)caneViolationsLineResultRow.get(":line")).split(":");
-				if (parts[0].length() > 0 && parts[0].contains(filename)) {
-					CaneCommentViolation violation = new CaneCommentViolation();
-					violation.setFile(parts[0]);
-					violation.setLine(Integer.parseInt(parts[1]));
-					violation.setClassName((String)caneViolationsLineResultRow.get(":class_name"));
-					violations.add(violation);
-				}
-			}
-		}
+    			ArrayList<Map<String, Object>> caneViolationsCommentResult = (ArrayList<Map<String, Object>>) caneViolations.get(":comment");
+    			for (Map<String, Object> caneViolationsLineResultRow : caneViolationsCommentResult) {
+    				String parts[] = ((String)caneViolationsLineResultRow.get(":line")).split(":");
+    				if (parts[0].length() > 0 && parts[0].equals(filename)) {
+    					CaneCommentViolation violation = new CaneCommentViolation();
+    					violation.setFile(parts[0]);
+    					violation.setLine(Integer.parseInt(parts[1]));
+    					violation.setClassName((String)caneViolationsLineResultRow.get(":class_name"));
+    					violations.add(violation);
+    				}
+    			}
+    		}
+        }
 		return violations;
 	}
 
 	@SuppressWarnings("unchecked")
 	public List<RoodiProblem> parseRoodi(String filename) {
-		if (roodiProblems == null) {
-			Map<String, Object> roodi = (Map<String, Object>) metricfuResult.get(":roodi");
-			roodiProblems = (ArrayList<Map<String, Object>>) roodi.get(":problems");
-		}
+        List<RoodiProblem> problems = new ArrayList<RoodiProblem>();
+        if (metricfuResult == null) {
+            LOG.warn("No metricfu results for roodi.");
+        } else {
+    		if (roodiProblems == null) {
+    			Map<String, Object> roodi = (Map<String, Object>) metricfuResult.get(":roodi");
+    			if (roodi != null) {
+    			    roodiProblems = (ArrayList<Map<String, Object>>) roodi.get(":problems");
+    			}
+    		}
 
-		List<RoodiProblem> problems = new ArrayList<RoodiProblem>();
-		if (roodiProblems != null) {
+    		if (roodiProblems != null) {
 
-			for (Map<String, Object> prob : roodiProblems) {
-				String file = escapePattern.matcher(safeString((String) prob.get(":file"))).replaceAll("");
+    			for (Map<String, Object> prob : roodiProblems) {
+    				String file = escapePattern.matcher(safeString((String) prob.get(":file"))).replaceAll("");
 
-				if (file.contains(filename)) {
-					RoodiProblem problem = new RoodiProblem();
-					problem.setFile(file);
-					problem.setLine(safeInteger((String)prob.get(":line")));
-					problem.setProblem(escapePattern.matcher(safeString((String) prob.get(":problem"))).replaceAll(""));
+                    if (filename.equals(file)) {
+    					RoodiProblem problem = new RoodiProblem();
+    					problem.setFile(file);
+    					problem.setLine(safeInteger((String)prob.get(":line")));
+    					problem.setProblem(escapePattern.matcher(safeString((String) prob.get(":problem"))).replaceAll(""));
 
-					if (problem.getFile().length() > 0 && problem.getLine() > 0) {
-						problems.add(problem);
-					}
-				}
-			}
-		}
+    					if (problem.getFile().length() > 0 && problem.getLine() > 0) {
+    						problems.add(problem);
+    					}
+    				}
+    			}
+    		}
+        }
 		return problems;
 	}
 
 	@SuppressWarnings("unchecked")
 	public List<ReekSmell> parseReek(String filename) {
-		if (reekFiles == null) {
-			Map<String, Object> reek = (Map<String, Object>) metricfuResult.get(":reek");
-			reekFiles = (ArrayList<Map<String, Object>>) reek.get(":matches");
-		}
+        List<ReekSmell> smells = new ArrayList<ReekSmell>();
+        if (metricfuResult == null) {
+            LOG.warn("No metricfu results for reek.");
+        } else {
+    		if (reekFiles == null) {
+    			Map<String, Object> reek = (Map<String, Object>) metricfuResult.get(":reek");
+    			if (reek != null) {
+    			    reekFiles = (ArrayList<Map<String, Object>>) reek.get(":matches");
+    			}
+    		}
 
-		List<ReekSmell> smells = new ArrayList<ReekSmell>();
-		if (reekFiles != null) {
+    		if (reekFiles != null) {
 
-			for (Map<String, Object> resultFile : reekFiles) {
-				String file = safeString((String) resultFile.get(":file_path"));
+    			for (Map<String, Object> resultFile : reekFiles) {
+    				String file = safeString((String) resultFile.get(":file_path"));
 
-				if (file.length() > 0 && file.contains(filename)) {
-					ArrayList<Map<String, Object>> resultSmells = (ArrayList<Map<String, Object>>) resultFile.get(":code_smells");
+    				if (filename.equals(file)) {
+    					ArrayList<Map<String, Object>> resultSmells = (ArrayList<Map<String, Object>>) resultFile.get(":code_smells");
 
-					for (Map<String, Object> resultSmell : resultSmells) {
-						ReekSmell smell = new ReekSmell();
-						smell.setFile(file);
-						smell.setMethod(safeString((String)resultSmell.get(":method")));
-						smell.setMessage(safeString((String)resultSmell.get(":message")));
-						smell.setType(safeString((String)resultSmell.get(":type")));
-						smells.add(smell);
-					}
-				}
-			}
-		}
+    					for (Map<String, Object> resultSmell : resultSmells) {
+    						ReekSmell smell = new ReekSmell();
+    						smell.setFile(file);
+    						smell.setMethod(safeString((String)resultSmell.get(":method")));
+    						smell.setMessage(safeString((String)resultSmell.get(":message")));
+    						smell.setType(safeString((String)resultSmell.get(":type")));
+    						smells.add(smell);
+    					}
+    					break;
+    				}
+    			}
+    		}
+        }
 		return smells;
 	}
 
 	@SuppressWarnings("unchecked")
 	public List<FlayReason> parseFlay() {
-		if (flayReasons == null) {
-			Map<String, Object> flay = (Map<String, Object>) metricfuResult.get(":flay");
-			flayReasons = (ArrayList<Map<String, Object>>) flay.get(":matches");
-		}
+        List<FlayReason> reasons = new ArrayList<FlayReason>();
+        if (metricfuResult == null) {
+            LOG.warn("No metricfu results for flay.");
+        } else {
+    		if (flayReasons == null) {
+    			Map<String, Object> flay = (Map<String, Object>) metricfuResult.get(":flay");
+    			if (flay != null) {
+    			    flayReasons = (ArrayList<Map<String, Object>>) flay.get(":matches");
+    			}
+    		}
 
-		List<FlayReason> reasons = new ArrayList<FlayReason>();
-		if (flayReasons != null) {
+    		if (flayReasons != null) {
 
-			for (Map<String, Object> resultReason : flayReasons) {
-				FlayReason reason = new FlayReason();
-				reason.setReason(safeString((String) resultReason.get(":reason")));
+    			for (Map<String, Object> resultReason : flayReasons) {
+    				FlayReason reason = new FlayReason();
+    				reason.setReason(safeString((String) resultReason.get(":reason")));
 
-				ArrayList<Map<String, Object>> resultMatches = (ArrayList<Map<String, Object>>) resultReason.get(":matches");
-				for (Map<String, Object> resultDuplication : resultMatches) {
-					Match match = reason.new Match((String)resultDuplication.get(":name"));
+    				ArrayList<Map<String, Object>> resultMatches = (ArrayList<Map<String, Object>>) resultReason.get(":matches");
+    				for (Map<String, Object> resultDuplication : resultMatches) {
+    					Match match = reason.new Match((String)resultDuplication.get(":name"));
 
-					// If flay was run with --diff, we should have the number of lines in the duplication. If not, make it 1.
-					Integer line = safeInteger((String)resultDuplication.get(":line"));
-					if (line > 0) {
-						match.setStartLine(line);
-						match.setLines(1);
-					} else {
-						Integer start = safeInteger((String)resultDuplication.get(":start"));
-						if (start > 0) {
-							match.setStartLine(start);
-						}
-						Integer lines = safeInteger((String)resultDuplication.get(":lines"));
-						if (lines > 0) {
-							match.setLines(lines);
-						}
-					}
-					reason.getMatches().add(match);
-				}
-				reasons.add(reason);
-			}
-		}
+    					// If flay was run with --diff, we should have the number of lines in the duplication. If not, make it 1.
+    					Integer line = safeInteger((String)resultDuplication.get(":line"));
+    					if (line > 0) {
+    						match.setStartLine(line);
+    						match.setLines(1);
+    					} else {
+    						Integer start = safeInteger((String)resultDuplication.get(":start"));
+    						if (start > 0) {
+    							match.setStartLine(start);
+    						}
+    						Integer lines = safeInteger((String)resultDuplication.get(":lines"));
+    						if (lines > 0) {
+    							match.setLines(lines);
+    						}
+    					}
+    					reason.getMatches().add(match);
+    				}
+    				reasons.add(reason);
+    			}
+    		}
+        }
 		return reasons;
 	}
 
@@ -239,10 +300,5 @@ public class MetricfuYamlParser implements BatchExtension {
 		} catch (Exception e) {
 			return 0;
 		}
-	}
-
-	public static void main(String[] args) {
-		MetricfuYamlParser parser = new MetricfuYamlParser("/home/gallen/work/report.yml");
-		parser.parseFlay();
 	}
 }

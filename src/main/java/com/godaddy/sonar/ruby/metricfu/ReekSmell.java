@@ -15,23 +15,24 @@ public class ReekSmell {
 
 	public static enum Smell {
 		Attribute,
+        BooleanParameter,
 		ClassVariable,
 		ControlCouple,
-		BooleanParameter,
 		ControlParameter,
 		DataClump,
 		Duplication,
 		DuplicateMethodCall,
 		FeatureEnvy,
-		UtilityFunction,
 		IrresponsibleModule,
+        LargeClass,
 		LongParameterList,
 		LongYieldList,
+		ModuleInitialize,
 		NestedIterators,
-		SimulatedPolymorphism,
 		NilCheck,
+		PrimaDonnaMethod,
 		RepeatedConditional,
-		LargeClass,
+        SimulatedPolymorphism,
 		TooManyInstanceVariables,
 		TooManyMethods,
 		TooManyStatements,
@@ -41,6 +42,7 @@ public class ReekSmell {
 		UncommunicativeParameterName,
 		UncommunicativeVariableName,
 		UnusedParameters,
+        UtilityFunction,
 	}
 
 	private static final Map<Smell, String> keyToSeverityMap;
@@ -48,23 +50,24 @@ public class ReekSmell {
 	static {
 		HashMap<Smell, String> mapKeyToSeverity = new HashMap<Smell, String>();
 		mapKeyToSeverity.put(Smell.Attribute, Severity.MINOR);
+        mapKeyToSeverity.put(Smell.BooleanParameter, Severity.MAJOR);
 		mapKeyToSeverity.put(Smell.ClassVariable, Severity.MINOR);
 		mapKeyToSeverity.put(Smell.ControlCouple, Severity.MAJOR);
-		mapKeyToSeverity.put(Smell.BooleanParameter, Severity.MAJOR);
 		mapKeyToSeverity.put(Smell.ControlParameter, Severity.MAJOR);
 		mapKeyToSeverity.put(Smell.DataClump, Severity.MINOR);
 		mapKeyToSeverity.put(Smell.Duplication, Severity.MINOR);
 		mapKeyToSeverity.put(Smell.DuplicateMethodCall, Severity.MINOR);
 		mapKeyToSeverity.put(Smell.FeatureEnvy, Severity.MAJOR);
-		mapKeyToSeverity.put(Smell.UtilityFunction, Severity.MAJOR);
 		mapKeyToSeverity.put(Smell.IrresponsibleModule, Severity.INFO);
+        mapKeyToSeverity.put(Smell.LargeClass, Severity.MINOR);
 		mapKeyToSeverity.put(Smell.LongParameterList, Severity.MINOR);
-		mapKeyToSeverity.put(Smell.LongYieldList, Severity.MINOR);
+        mapKeyToSeverity.put(Smell.LongYieldList, Severity.MINOR);
+        mapKeyToSeverity.put(Smell.ModuleInitialize, Severity.MINOR);
 		mapKeyToSeverity.put(Smell.NestedIterators, Severity.MINOR);
-		mapKeyToSeverity.put(Smell.SimulatedPolymorphism, Severity.MINOR);
 		mapKeyToSeverity.put(Smell.NilCheck, Severity.MINOR);
+        mapKeyToSeverity.put(Smell.PrimaDonnaMethod, Severity.MINOR);
 		mapKeyToSeverity.put(Smell.RepeatedConditional, Severity.MINOR);
-		mapKeyToSeverity.put(Smell.LargeClass, Severity.MINOR);
+        mapKeyToSeverity.put(Smell.SimulatedPolymorphism, Severity.MINOR);
 		mapKeyToSeverity.put(Smell.TooManyInstanceVariables, Severity.MINOR);
 		mapKeyToSeverity.put(Smell.TooManyMethods, Severity.MINOR);
 		mapKeyToSeverity.put(Smell.TooManyStatements, Severity.MINOR);
@@ -74,6 +77,7 @@ public class ReekSmell {
 		mapKeyToSeverity.put(Smell.UncommunicativeParameterName, Severity.MINOR);
 		mapKeyToSeverity.put(Smell.UncommunicativeVariableName, Severity.MINOR);
 		mapKeyToSeverity.put(Smell.UnusedParameters, Severity.MINOR);
+        mapKeyToSeverity.put(Smell.UtilityFunction, Severity.MAJOR);
 		keyToSeverityMap = Collections.unmodifiableMap(mapKeyToSeverity);
 	}
 

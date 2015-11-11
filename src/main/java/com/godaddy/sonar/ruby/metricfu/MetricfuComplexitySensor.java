@@ -1,95 +1,103 @@
 package com.godaddy.sonar.ruby.metricfu;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.Sensor;
 import org.sonar.api.batch.SensorContext;
+import org.sonar.api.batch.fs.FileSystem;
+import org.sonar.api.batch.fs.InputFile;
+import org.sonar.api.config.Settings;
 import org.sonar.api.measures.CoreMetrics;
+import org.sonar.api.measures.Measure;
 import org.sonar.api.measures.PersistenceMode;
 import org.sonar.api.measures.RangeDistributionBuilder;
 import org.sonar.api.resources.Project;
-import org.sonar.api.scan.filesystem.FileQuery;
-import org.sonar.api.scan.filesystem.ModuleFileSystem;
 
+import com.godaddy.sonar.ruby.RubyPlugin;
 import com.godaddy.sonar.ruby.core.Ruby;
-import com.godaddy.sonar.ruby.core.RubyFile;
+import com.google.common.collect.Lists;
 
 public class MetricfuComplexitySensor implements Sensor
 {
     private static final Logger LOG = LoggerFactory.getLogger(MetricfuComplexitySensor.class);
 
-    private MetricfuYamlParser metricfuYamlParser;
-    private ModuleFileSystem moduleFileSystem;
     private static final Number[] FILES_DISTRIB_BOTTOM_LIMITS = { 0, 5, 10, 20, 30, 60, 90 };
     private static final Number[] FUNCTIONS_DISTRIB_BOTTOM_LIMITS = { 1, 2, 4, 6, 8, 10, 12, 20, 30 };
+    private static final String COMPLEXITY_SAIKURO = "saikuro";
+    private static final String COMPLEXITY_CANE = "cane";
 
-    public MetricfuComplexitySensor(ModuleFileSystem moduleFileSystem, MetricfuYamlParser metricfuYamlParser)
-    {
-        this.moduleFileSystem = moduleFileSystem;
+    private MetricfuYamlParser metricfuYamlParser;
+    private Settings settings;
+    private FileSystem fileSystem;
+
+    public MetricfuComplexitySensor(Settings settings, FileSystem fileSystem, MetricfuYamlParser metricfuYamlParser) {
+        this.settings = settings;
+        this.fileSystem = fileSystem;
         this.metricfuYamlParser = metricfuYamlParser;
     }
 
-    public boolean shouldExecuteOnProject(Project project)
-    {
-        return Ruby.KEY.equals(project.getLanguageKey());
+    public boolean shouldExecuteOnProject(Project project) {
+        return fileSystem.hasFiles(fileSystem.predicates().hasLanguage(Ruby.KEY));
     }
 
-    public void analyse(Project project, SensorContext context)
-    {
-        List<File> sourceDirs = moduleFileSystem.sourceDirs();
-        List<File> rubyFilesInProject = moduleFileSystem.files(FileQuery.onSource().onLanguage(project.getLanguageKey()));
+    public void analyse(Project project, SensorContext context) {
+        String complexityType = settings.getString(RubyPlugin.METRICFU_COMPLEXITY_METRIC_PROPERTY);
 
-        for (File file : rubyFilesInProject)
-        {
-            LOG.debug("analyzing functions for classes in the file: " + file.getName());
-            try
-            {
-                analyzeFile(file, sourceDirs, context);
-            } catch (IOException e)
-            {
-                LOG.error("Can not analyze the file " + file.getAbsolutePath() + " for complexity");
+        if (!complexityType.equalsIgnoreCase(COMPLEXITY_CANE) && !complexityType.equalsIgnoreCase(COMPLEXITY_SAIKURO)) {
+            LOG.warn("Unknown/unsupported complexity type '" + complexityType + ", forcing complexity to " + COMPLEXITY_SAIKURO + ".");
+            complexityType = COMPLEXITY_SAIKURO;
+        }
+        LOG.info("MetricfuComplexitySensor: using " + complexityType + " complexity.");
+
+        List<InputFile> sourceFiles = Lists.newArrayList(fileSystem.inputFiles(fileSystem.predicates().hasLanguage(Ruby.KEY)));
+        for (InputFile inputFile : sourceFiles) {
+            LOG.debug("Analyzing functions for classes in the file: " + inputFile.file().getName());
+            analyzeFile(inputFile, context, complexityType);
+        }
+    }
+
+    private void analyzeFile(InputFile inputFile, SensorContext sensorContext, String complexityType) {
+        RangeDistributionBuilder fileDistribution = new RangeDistributionBuilder(CoreMetrics.FILE_COMPLEXITY_DISTRIBUTION, FILES_DISTRIB_BOTTOM_LIMITS);
+        RangeDistributionBuilder functionDistribution = new RangeDistributionBuilder(CoreMetrics.FUNCTION_COMPLEXITY_DISTRIBUTION, FUNCTIONS_DISTRIB_BOTTOM_LIMITS);
+        int fileComplexity = 0;
+        int numMethods = 0;
+        if (complexityType.equalsIgnoreCase(COMPLEXITY_CANE)) {
+            for (CaneViolation v : metricfuYamlParser.parseCane(inputFile.relativePath())) {
+                if (v instanceof CaneComplexityViolation) {
+                    CaneComplexityViolation c = (CaneComplexityViolation) v;
+                    fileComplexity += c.getComplexity();
+                    numMethods++;
+                    functionDistribution.add(Double.valueOf(c.getComplexity()));
+                }
+            }
+        } else {
+            for (SaikuroClassComplexity c : metricfuYamlParser.parseSaikuro(inputFile.relativePath())) {
+                for (SaikuroMethodComplexity m : c.getMethods()) {
+                    fileComplexity += m.getComplexity();
+                    numMethods++;
+                    functionDistribution.add(Double.valueOf(m.getComplexity()));
+                }
             }
         }
-    }
 
-    private void analyzeFile(File file, List<File> sourceDirs, SensorContext sensorContext) throws IOException
-    {
-        RubyFile resource = new RubyFile(file, sourceDirs);
-        List<SaikuroComplexity> functions = metricfuYamlParser.parseSaikuro(resource.getName());
-
-        // if function list is empty, then return, do not compute any complexity
-        // on that file
-        if (functions.isEmpty())
-        {
-            return;
+        LOG.error("NUMBER OF METHODS = " + numMethods);
+        if (numMethods > 0) {
+            LOG.error("SETTING COMPLEXITY METRICS, fileComplexity = " + fileComplexity);
+            fileDistribution.add(Double.valueOf(fileComplexity));
+            Measure m = sensorContext.saveMeasure(inputFile, fileDistribution.build().setPersistenceMode(PersistenceMode.MEMORY));
+            if (m == null) {
+                LOG.error("SAVING OF METRIC #1 FAILED!");
+            }
+            m = sensorContext.saveMeasure(inputFile, CoreMetrics.FUNCTION_COMPLEXITY, Double.valueOf(fileComplexity) / numMethods);
+            if (m == null) {
+                LOG.error("SAVING OF METRIC #2 FAILED!");
+            }
+            m = sensorContext.saveMeasure(inputFile, functionDistribution.build().setPersistenceMode(PersistenceMode.MEMORY));
+            if (m == null) {
+                LOG.error("SAVING OF METRIC #3 FAILED!");
+            }
         }
-
-        // COMPLEXITY
-        int fileComplexity = 0;
-        for (SaikuroComplexity function : functions)
-        {
-            fileComplexity += function.getComplexity();
-        }
-        sensorContext.saveMeasure(resource, CoreMetrics.COMPLEXITY, Double.valueOf(fileComplexity));
-
-        // FILE_COMPLEXITY_DISTRIBUTION
-        RangeDistributionBuilder fileDistribution = new RangeDistributionBuilder(CoreMetrics.FILE_COMPLEXITY_DISTRIBUTION, FILES_DISTRIB_BOTTOM_LIMITS);
-        fileDistribution.add(Double.valueOf(fileComplexity));
-        sensorContext.saveMeasure(resource, fileDistribution.build().setPersistenceMode(PersistenceMode.MEMORY));
-
-        // FUNCTION_COMPLEXITY
-        sensorContext.saveMeasure(resource, CoreMetrics.FUNCTION_COMPLEXITY, Double.valueOf(fileComplexity) / functions.size());
-
-        // FUNCTION_COMPLEXITY_DISTRIBUTION
-        RangeDistributionBuilder functionDistribution = new RangeDistributionBuilder(CoreMetrics.FUNCTION_COMPLEXITY_DISTRIBUTION, FUNCTIONS_DISTRIB_BOTTOM_LIMITS);
-        for (SaikuroComplexity function : functions)
-        {
-            functionDistribution.add(Double.valueOf(function.getComplexity()));
-        }
-        sensorContext.saveMeasure(resource, functionDistribution.build().setPersistenceMode(PersistenceMode.MEMORY));
     }
 }

@@ -13,25 +13,9 @@
     </description>
   </rule>
   <rule>
-    <key>ClassVariable</key>
+    <key>BooleanParameter</key>
     <priority>MAJOR</priority>
-    <name><![CDATA[Class Variable]]></name>
-    <description>
-      <![CDATA[
-        <p>
-          Class variables form part of the global runtime state, and as such make it easy for one part 
-          of the system to accidentally or inadvertently depend on another part of the system. So the 
-          system becomes more prone to problems where changing something over here breaks something 
-          over there. In particular, class variables can make it hard to set up tests (because the 
-          context of the test includes all global state).
-        </p>
-      ]]>
-    </description>
-  </rule>
-  <rule>
-    <key>ControlCouple</key>
-    <priority>MAJOR</priority>
-    <name><![CDATA[Control Couple]]></name>
+    <name><![CDATA[Boolean Parameter]]></name>
     <description>
       <![CDATA[
         <p>
@@ -51,9 +35,25 @@
     </description>
   </rule>
   <rule>
-    <key>BooleanParameter</key>
+    <key>ClassVariable</key>
     <priority>MAJOR</priority>
-    <name><![CDATA[Boolean Parameter]]></name>
+    <name><![CDATA[Class Variable]]></name>
+    <description>
+      <![CDATA[
+        <p>
+          Class variables form part of the global runtime state, and as such make it easy for one part 
+          of the system to accidentally or inadvertently depend on another part of the system. So the 
+          system becomes more prone to problems where changing something over here breaks something 
+          over there. In particular, class variables can make it hard to set up tests (because the 
+          context of the test includes all global state).
+        </p>
+      ]]>
+    </description>
+  </rule>
+  <rule>
+    <key>ControlCouple</key>
+    <priority>MAJOR</priority>
+    <name><![CDATA[Control Couple]]></name>
     <description>
       <![CDATA[
         <p>
@@ -178,35 +178,6 @@ end
     </description>
   </rule>
   <rule>
-    <key>UtilityFunction</key>
-    <priority>MAJOR</priority>
-    <name><![CDATA[Utility Function]]></name>
-    <description>
-      <![CDATA[
-        <p>
-          A Utility Function is any instance method that has no dependency on the state of the instance.
-        </p>
-        <p>
-          A Utility Function reduces the code's ability to communicate intent: code that "belongs" on one 
-          class but which is located in another can be hard to find, and may upset the "System of Names" in 
-          the host class. A Utility Function also affects the design's flexibility: A code fragment that 
-          is in the wrong class creates couplings that may not be natural within the application's domain, 
-          and creates a loss of cohesion in the unwilling host class.
-        </p>
-        <p>
-          A Utility Function often arises because it must manipulate other objects (usually its arguments) to 
-          get them into a useful form, and one force preventing them (the arguments) doing this themselves 
-          is that the common knowledge lives outside the arguments, or the arguments are of too basic a type 
-          to justify extending that type. Therefore there must be something which 'knows' about the contents 
-          or purposes of the arguments. That thing would have to be more than just a basic type, because the 
-          basic types are either containers which don’t know about their contents, or they are single objects 
-          which can't capture their relationship with their fellows of the same type. So, this thing with the 
-          extra knowledge should be reified into a class, and the utility method will most likely belong there.
-        </p>
-      ]]>
-    </description>
-  </rule>
-  <rule>
     <key>IrresponsibleModule</key>
     <priority>MINOR</priority>
     <name><![CDATA[Irresponsible Module]]></name>
@@ -215,6 +186,20 @@ end
         <p>
           Classes and modules are the units of reuse and release. It is therefore considered good practice to 
           annotate every class and module with a brief comment outlining its responsibilities.        
+        </p>
+      ]]>
+    </description>
+  </rule>
+  <rule>
+    <key>LargeClass</key>
+    <priority>MAJOR</priority>
+    <name><![CDATA[Large Class]]></name>
+    <description>
+      <![CDATA[
+        <p>
+          A Large Class is a class or module that has a large number of instance variables, methods 
+          or lines of code in any one piece of its specification. (That is, this smell relates to 
+          pieces of the class''s specification, not to the size of the corresponding instance of Class.).        
         </p>
       ]]>
     </description>
@@ -244,6 +229,19 @@ end
     </description>
   </rule>
   <rule>
+    <key>ModuleInitialize</key>
+    <priority>MINOR</priority>
+    <name><![CDATA[Module Initialize]]></name>
+    <description>
+      <![CDATA[
+        <p>
+          A module is usually a mixin, so when initialize method is present it is hard to tell initialization
+          order and parameters so having 'initialize' in a module is usually a bad idea.        
+        </p>
+      ]]>
+    </description>
+  </rule>
+  <rule>
     <key>NestedIterators</key>
     <priority>MINOR</priority>
     <name><![CDATA[Nested Iterators]]></name>
@@ -256,30 +254,6 @@ end
     </description>
   </rule>
   <rule>
-    <key>SimulatedPolymorphism</key>
-    <priority>MAJOR</priority>
-    <name><![CDATA[Simulated Polymorphism]]></name>
-    <description>
-      <![CDATA[
-        <p>
-          Simulated Polymorphism occurs when
-        </p>
-        <ul>
-          <li>code uses a case statement (especially on a type field);</li>
-	      <li>or code has several if statements in a row (especially if they're comparing against the same value);</li>
-	      <li>or code uses instance_of?, kind_of?, is_a?, or === to decide what type it's working with;</li>
-	      <li>or multiple conditionals in different places test the same value.</li>
-        </ul>
-        <p>
-          Conditional code is hard to read and understand, because the reader must hold more state in his head. 
-          When the same value is tested in multiple places throughout an application, any change to the set of 
-          possible values will require many methods and classes to change. Tests for the type of an object may 
-          indicate that the abstraction represented by that type is not completely defined (or understood).
-        </p>        
-      ]]>
-    </description>
-  </rule>
-  <rule>
     <key>NilCheck</key>
     <priority>MINOR</priority>
     <name><![CDATA[Nil Check]]></name>
@@ -288,6 +262,29 @@ end
         <p>
           Perform nil check is a type check. Which violates "tell, don't ask".        
         </p>
+      ]]>
+    </description>
+  </rule>
+  <rule>
+    <key>PrimaDonnaMethod</key>
+    <priority>MINOR</priority>
+    <name><![CDATA[Prima Donna Method]]></name>
+    <description>
+      <![CDATA[
+        <p>
+		  The ! in method names that end with ! means, "This method is dangerous"
+		  -- or, more precisely, this method is the "dangerous" version of an
+		  equivalent method, with the same name minus the !. "Danger" is
+		  relative; the ! doesn't mean anything at all unless the method name
+		  it's in corresponds to a similar but bang-less method name.
+			
+		  Don't add ! to your destructive (receiver-changing) methods' names,
+		  unless you consider the changing to be "dangerous" and you have a
+		  "non-dangerous" equivalent method without the !. If some arbitrary
+		  subset of destructive methods end with !, then the whole point of !
+		  gets distorted and diluted, and ! ceases to convey any information
+		  whatsoever.
+	   </p>
       ]]>
     </description>
   </rule>
@@ -307,16 +304,26 @@ end
     </description>
   </rule>
   <rule>
-    <key>LargeClass</key>
+    <key>SimulatedPolymorphism</key>
     <priority>MAJOR</priority>
-    <name><![CDATA[Large Class]]></name>
+    <name><![CDATA[Simulated Polymorphism]]></name>
     <description>
       <![CDATA[
         <p>
-          A Large Class is a class or module that has a large number of instance variables, methods 
-          or lines of code in any one piece of its specification. (That is, this smell relates to 
-          pieces of the class''s specification, not to the size of the corresponding instance of Class.).        
+          Simulated Polymorphism occurs when
         </p>
+        <ul>
+          <li>code uses a case statement (especially on a type field);</li>
+          <li>or code has several if statements in a row (especially if they're comparing against the same value);</li>
+          <li>or code uses instance_of?, kind_of?, is_a?, or === to decide what type it's working with;</li>
+          <li>or multiple conditionals in different places test the same value.</li>
+        </ul>
+        <p>
+          Conditional code is hard to read and understand, because the reader must hold more state in his head. 
+          When the same value is tested in multiple places throughout an application, any change to the set of 
+          possible values will require many methods and classes to change. Tests for the type of an object may 
+          indicate that the abstraction represented by that type is not completely defined (or understood).
+        </p>        
       ]]>
     </description>
   </rule>
@@ -481,6 +488,35 @@ end
         <p>
           Having unused parameters in a method is code smell because leaving dead code in a method 
           can never improve the method and it makes the code confusing to read.        
+        </p>
+      ]]>
+    </description>
+  </rule>
+  <rule>
+    <key>UtilityFunction</key>
+    <priority>MAJOR</priority>
+    <name><![CDATA[Utility Function]]></name>
+    <description>
+      <![CDATA[
+        <p>
+          A Utility Function is any instance method that has no dependency on the state of the instance.
+        </p>
+        <p>
+          A Utility Function reduces the code's ability to communicate intent: code that "belongs" on one 
+          class but which is located in another can be hard to find, and may upset the "System of Names" in 
+          the host class. A Utility Function also affects the design's flexibility: A code fragment that 
+          is in the wrong class creates couplings that may not be natural within the application's domain, 
+          and creates a loss of cohesion in the unwilling host class.
+        </p>
+        <p>
+          A Utility Function often arises because it must manipulate other objects (usually its arguments) to 
+          get them into a useful form, and one force preventing them (the arguments) doing this themselves 
+          is that the common knowledge lives outside the arguments, or the arguments are of too basic a type 
+          to justify extending that type. Therefore there must be something which 'knows' about the contents 
+          or purposes of the arguments. That thing would have to be more than just a basic type, because the 
+          basic types are either containers which don’t know about their contents, or they are single objects 
+          which can't capture their relationship with their fellows of the same type. So, this thing with the 
+          extra knowledge should be reified into a class, and the utility method will most likely belong there.
         </p>
       ]]>
     </description>

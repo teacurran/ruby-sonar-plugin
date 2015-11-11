@@ -24,7 +24,7 @@ public class RubyFileTest {
 	}
 	
 	@Test
-	public void test() 
+	public void testRubyFile() 
 	{	
 		assertEquals("ruby", ruby.getKey());
 		assertEquals("Ruby", ruby.getName());

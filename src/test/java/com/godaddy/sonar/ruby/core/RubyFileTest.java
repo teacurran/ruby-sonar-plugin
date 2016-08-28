@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.nio.file.FileSystems;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,46 +14,49 @@ import org.junit.Before;
 import org.junit.Test;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.internal.DefaultInputFile;
+import org.sonar.api.resources.Project;
 import org.sonar.api.resources.Qualifiers;
 import org.sonar.api.resources.Scopes;
 
 public class RubyFileTest {
 	protected final static String SOURCE_FILE = "/path/to/source/file.rb";
-	
+
 	protected RubyFile rubyFile;
-	
+
 	@Before
 	public void setUp() {
+	    Project project = new Project("test project");
+	    project.setLanguage(LanguageRuby.INSTANCE);
+
 		File file = new File(SOURCE_FILE);
 		List<InputFile> sourceDirs = new ArrayList<InputFile>();
 
-//		fs.add(new DefaultInputFile(file.getPath()).setAbsolutePath(file.getAbsolutePath()).setType(Type.MAIN).setLanguage(Java.KEY));
-		File aSrcDir = new File("/path/to/source");
-//		sourceDirs.add(new DefaultInputFile("/path/to/source"));
-        sourceDirs.add(new DefaultInputFile(aSrcDir.getPath()).setAbsolutePath(file.getParent()));
-		
+		DefaultInputFile difFile = new DefaultInputFile(project.getKey(), file.getParent());
+		difFile.setModuleBaseDir(FileSystems.getDefault().getPath("/"));
+        sourceDirs.add(difFile);
+
 		rubyFile = new RubyFile(file, sourceDirs);
 	}
-	
-	@After 
+
+	@After
 	public void tearDown() {
-		
+
 	}
-	
-	
+
+
 
 	@Test(expected=IllegalArgumentException.class)
 	public void testRubyFileWithNullFile() {
 		new RubyFile(null, new ArrayList<InputFile>());
 	}
-	
+
 	@Test
 	public void testRubyFileWithNullSourceDirs() {
 		File file = new File(SOURCE_FILE);
 		rubyFile = new RubyFile(file, null);
 		assertEquals("[default].file", rubyFile.getKey());
 	}
-	
+
 	@Test
 	public void testGetParent() {
 		RubyPackage parent = rubyFile.getParent();

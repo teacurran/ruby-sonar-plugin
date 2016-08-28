@@ -29,7 +29,7 @@ public class RubyFileTest {
 		assertEquals("ruby", ruby.getKey());
 		assertEquals("Ruby", ruby.getName());
 		
-		String[] expected = new String[] {"rb"};
+		String[] expected = new String[] {".rb"};
 		assertArrayEquals(expected, ruby.getFileSuffixes());
 	}
 

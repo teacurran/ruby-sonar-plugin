@@ -8,6 +8,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +27,6 @@ import org.sonar.api.config.Settings;
 import org.sonar.api.measures.Measure;
 import org.sonar.api.measures.Metric;
 import org.sonar.api.resources.Project;
-import org.sonar.api.resources.Resource;
 
 import com.godaddy.sonar.ruby.core.LanguageRuby;
 
@@ -78,7 +78,7 @@ public class RubySensorTest {
   @Test
   public void testShouldExecuteOnProject() {
     RubySensor sensor = new RubySensor(settings, fs);
-    
+
     expect(fs.predicates()).andReturn(filePredicates).times(1);
     expect(fs.hasFiles(isA(FilePredicate.class))).andReturn(true).times(1);
     expect(filePredicates.hasLanguage(eq("ruby"))).andReturn(filePredicate).times(1);
@@ -96,16 +96,15 @@ public class RubySensorTest {
     Measure measure = new Measure();
     List<InputFile> inputFiles = new ArrayList<InputFile>();
     File aFile = new File(INPUT_SOURCE_FILE);
-    DefaultInputFile difFile = new DefaultInputFile(aFile.getPath());
-    difFile.setFile(aFile);
+    DefaultInputFile difFile = new DefaultInputFile(project.getKey(), INPUT_SOURCE_FILE);
+    difFile.setModuleBaseDir(FileSystems.getDefault().getPath("."));
 
     inputFiles.add(difFile);
 
     expect(sensorContext.saveMeasure(isA(InputFile.class), isA(Metric.class), isA(Double.class))).andReturn(measure).times(4);
-    expect(sensorContext.saveMeasure(isA(Resource.class), isA(Metric.class), isA(Double.class))).andReturn(measure).times(1);
     expect(fs.predicates()).andReturn(filePredicates).times(1);
     expect(filePredicates.hasLanguage(eq("ruby"))).andReturn(filePredicate).times(1);
-    expect(fs.inputFiles(isA(FilePredicate.class))).andReturn((Iterable<InputFile>) inputFiles).times(1);
+    expect(fs.inputFiles(isA(FilePredicate.class))).andReturn(inputFiles).times(1);
     expect(fs.encoding()).andReturn(StandardCharsets.UTF_8).times(1);
 
     mocksControl.replay();

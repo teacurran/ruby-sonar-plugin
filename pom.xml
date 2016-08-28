@@ -83,8 +83,13 @@
 			<artifactId>commons-configuration</artifactId>
 			<version>1.9</version>
 		</dependency>
+		<dependency>
+			<groupId>org.jruby</groupId>
+			<artifactId>jruby</artifactId>
+			<version>1.7.25</version>
+		</dependency>
 
-	</dependencies>
+    </dependencies>
 
 	<build>
 		<plugins>
@@ -107,7 +112,7 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<!-- UTF-8 bundles are not supported by Java, so they must be converted 
+				<!-- UTF-8 bundles are not supported by Java, so they must be converted
 					during build -->
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>native2ascii-maven-plugin</artifactId>
@@ -158,7 +163,7 @@
 		</plugins>
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
+				<!--This plugin's configuration is used to store Eclipse m2e settings
 					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
